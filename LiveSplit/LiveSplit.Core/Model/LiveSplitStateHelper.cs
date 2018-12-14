@@ -170,7 +170,7 @@ namespace LiveSplit.Model
                 }
             }
 
-            if (showBestSegments && state.LayoutSettings.ShowBestSegments && CheckBestTimeSegment(state, splitNumber, method))
+            if (showBestSegments && state.LayoutSettings.ShowBestSegments && CheckBestSegment(state, splitNumber, method))
             {
                 splitColor = GetBestSegmentColor(state);
             }
@@ -185,7 +185,7 @@ namespace LiveSplit.Model
         /// <param name="splitNumber">The split to check.</param>
         /// <param name="method">The timing method to use.</param>
         /// <returns>Returns whether or not the indicated split is a Best Segment.</returns>
-        public static bool CheckBestTimeSegment(LiveSplitState state, int splitNumber, TimingMethod method)
+        public static bool CheckBestSegment(LiveSplitState state, int splitNumber, TimingMethod method)
         {
             if (state.Run[splitNumber].SplitTime[method] == null)
                 return false;

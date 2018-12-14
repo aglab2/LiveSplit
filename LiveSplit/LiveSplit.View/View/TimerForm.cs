@@ -2397,7 +2397,7 @@ namespace LiveSplit.View
             var warnUser = false;
             for (var index = 0; index < CurrentState.Run.Count; index++)
             {
-                if( LiveSplitStateHelper.CheckBestTimeSegment( CurrentState, index, CurrentState.CurrentTimingMethod )
+                if( LiveSplitStateHelper.CheckBestSegment( CurrentState, index, CurrentState.CurrentTimingMethod )
                     || LiveSplitStateHelper.CheckBestDeathCountSegment( CurrentState, index, CurrentState.CurrentTimingMethod ) )
                 {
                     warnUser = true;
