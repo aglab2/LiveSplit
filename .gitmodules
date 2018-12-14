@@ -70,9 +70,6 @@
 	path = LiveSplit/Components/LiveSplit.Video
 	url = https://github.com/LiveSplit/LiveSplit.Video.git
 	branch = master
-[submodule "LiveSplit/Components/LiveSplit.Subsplits"]
-	path = LiveSplit/Components/LiveSplit.Subsplits
-	url = https://github.com/LiveSplit/LiveSplit.Subsplits
 [submodule "LiveSplit/Libs/xlio"]
 	path = LiveSplit/Libs/xlio
 	url = https://github.com/LiveSplit/xlio.git
