@@ -121,6 +121,15 @@ namespace LiveSplit.Model.RunFactories
                     split.BestSegmentTime = version >= new Version(1, 4, 1) ? Time.FromXml(goldSplit) : Time.ParseText(goldSplit.InnerText);
                 }
 
+                var bestDeaths = segmentElement["BestDeathCount"];
+                if( bestDeaths != null && bestDeaths.InnerText.Length > 0 ) {
+                    split.BestDeathCount = int.Parse( bestDeaths.InnerText );
+                }
+                var pbDeaths = segmentElement["PersonalBestDeathCount"];
+                if( pbDeaths != null && pbDeaths.InnerText.Length > 0 ) {
+                    split.PersonalBestDeathCount = int.Parse(pbDeaths.InnerText);
+                }
+
                 var history = segmentElement["SegmentHistory"];
                 foreach (var historyNode in history.GetElementsByTagName("Time"))
                 {

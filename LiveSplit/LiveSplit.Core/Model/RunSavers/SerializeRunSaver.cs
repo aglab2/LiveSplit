@@ -11,6 +11,7 @@ namespace LiveSplit.Model.RunSavers
             foreach (var segment in obj)
             {
                 segment.SplitTime = default(Time);
+                segment.DeathCount = -1;
             }
 
             var formatter = new BinaryFormatter();

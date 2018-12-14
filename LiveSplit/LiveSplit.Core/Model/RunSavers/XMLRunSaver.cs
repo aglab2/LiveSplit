@@ -78,6 +78,14 @@ namespace LiveSplit.Model.RunSavers
 
                 splitElement.AppendChild(segment.BestSegmentTime.ToXml(document, "BestSegmentTime"));
 
+                var bestDeaths = document.CreateElement( "BestDeathCount" );
+                bestDeaths.InnerText = segment.BestDeathCount.ToString();
+                splitElement.AppendChild( bestDeaths );
+
+                var pbDeaths = document.CreateElement( "PersonalBestDeathCount" );
+                pbDeaths.InnerText = segment.PersonalBestDeathCount.ToString();
+                splitElement.AppendChild( pbDeaths );
+
                 var history = document.CreateElement("SegmentHistory");
                 foreach (var historySegment in segment.SegmentHistory)
                 {

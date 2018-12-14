@@ -17,19 +17,24 @@ namespace LiveSplit.Model
         public IComparisons Comparisons { get; set; }
         public Time BestSegmentTime { get; set; }
         public Time SplitTime { get; set; }
+        public int DeathCount { get; set; }
+        public int BestDeathCount { get; set; }
+        public int PersonalBestDeathCount { get; set; }
         public SegmentHistory SegmentHistory { get; set;}
         
-        public Segment(
-            string name, Time pbSplitTime = default(Time), 
+        public Segment( string name, Time pbSplitTime = default(Time),
             Time bestSegmentTime = default(Time), Image icon = null,
-            Time splitTime = default(Time))
+            Time splitTime = default(Time), int deathCount = -1, int bestDeathCount = -1, int pbDeathCount = -1)
         {
             Comparisons = new CompositeComparisons();
             Name = name;
             PersonalBestSplitTime = pbSplitTime;
             BestSegmentTime = bestSegmentTime;
             SplitTime = splitTime;
-            Icon = icon;
+            DeathCount = deathCount;
+            BestDeathCount = bestDeathCount;
+            PersonalBestDeathCount = pbDeathCount;
+            Icon = null;
             SegmentHistory = new SegmentHistory();
         }
 
@@ -42,6 +47,9 @@ namespace LiveSplit.Model
                 BestSegmentTime = BestSegmentTime,
                 SplitTime = SplitTime,
                 Icon = Icon,
+                DeathCount = DeathCount,
+                BestDeathCount = BestDeathCount,
+                PersonalBestDeathCount = PersonalBestDeathCount,
                 SegmentHistory = newSegmentHistory,
                 Comparisons = (IComparisons)Comparisons.Clone()
             };

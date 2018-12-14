@@ -12,6 +12,9 @@ namespace LiveSplit.Model
         IComparisons Comparisons { get; set; }
         Time BestSegmentTime { get; set; }
         Time SplitTime { get; set; }
+        int DeathCount { get; set; }
+        int BestDeathCount { get; set; }
+        int PersonalBestDeathCount { get; set; }
         SegmentHistory SegmentHistory { get; set; }
     }
 }

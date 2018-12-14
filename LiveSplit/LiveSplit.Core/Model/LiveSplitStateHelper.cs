@@ -170,7 +170,7 @@ namespace LiveSplit.Model
                 }
             }
 
-            if (showBestSegments && state.LayoutSettings.ShowBestSegments && CheckBestSegment(state, splitNumber, method))
+            if (showBestSegments && state.LayoutSettings.ShowBestSegments && CheckBestTimeSegment(state, splitNumber, method))
             {
                 splitColor = GetBestSegmentColor(state);
             }
@@ -185,7 +185,7 @@ namespace LiveSplit.Model
         /// <param name="splitNumber">The split to check.</param>
         /// <param name="method">The timing method to use.</param>
         /// <returns>Returns whether or not the indicated split is a Best Segment.</returns>
-        public static bool CheckBestSegment(LiveSplitState state, int splitNumber, TimingMethod method)
+        public static bool CheckBestTimeSegment(LiveSplitState state, int splitNumber, TimingMethod method)
         {
             if (state.Run[splitNumber].SplitTime[method] == null)
                 return false;
@@ -193,6 +193,22 @@ namespace LiveSplit.Model
             var curSegment = GetPreviousSegmentTime(state, splitNumber, method);
             var bestSegment = state.Run[splitNumber].BestSegmentTime[method];
             return bestSegment == null || curSegment < bestSegment || delta < TimeSpan.Zero;
+        }
+
+        /// <summary>
+        /// Calculates whether or not the Split Death Counts for the indicated split qualify as a Best Segment.
+        /// </summary>
+        /// <param name="state">The current state.</param>
+        /// <param name="splitNumber">The split to check.</param>
+        /// <param name="method">The timing method to use.</param>
+        /// <returns>Returns whether or not the indicated split is a Best Segment.</returns>
+        public static bool CheckBestDeathCountSegment(LiveSplitState state, int splitNumber, TimingMethod method)
+        {
+            if( state.Run[splitNumber].SplitTime[method] == null ) {
+                return false;
+            }
+            var targetSplit = state.Run[splitNumber];
+            return targetSplit.BestDeathCount == -1 || targetSplit.DeathCount < targetSplit.BestDeathCount;
         }
 
         private static Color GetBestSegmentColor(LiveSplitState state)

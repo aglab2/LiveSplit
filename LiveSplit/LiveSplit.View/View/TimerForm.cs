@@ -2325,7 +2325,8 @@ namespace LiveSplit.View
 
         private void TimerForm_Load(object sender, EventArgs e)
         {
-            CheckForUpdates();
+            // Updates from original LiveSplit are disabled.
+            //CheckForUpdates();
         }
 
         private void closeSplitsMenuItem_Click(object sender, EventArgs e)
@@ -2396,7 +2397,8 @@ namespace LiveSplit.View
             var warnUser = false;
             for (var index = 0; index < CurrentState.Run.Count; index++)
             {
-                if (LiveSplitStateHelper.CheckBestSegment(CurrentState, index, CurrentState.CurrentTimingMethod))
+                if( LiveSplitStateHelper.CheckBestTimeSegment( CurrentState, index, CurrentState.CurrentTimingMethod )
+                    || LiveSplitStateHelper.CheckBestDeathCountSegment( CurrentState, index, CurrentState.CurrentTimingMethod ) )
                 {
                     warnUser = true;
                     break;
@@ -2407,7 +2409,7 @@ namespace LiveSplit.View
             if (warnUser)
             {
                 DontRedraw = true;
-                var result = MessageBox.Show(this, "You have beaten some of your best times.\r\nDo you want to update them?", "Update Times?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+                var result = MessageBox.Show(this, "You have beaten some of your best results.\r\nDo you want to update them?", "Update results?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
                 DontRedraw = false;
                 return result;
             }

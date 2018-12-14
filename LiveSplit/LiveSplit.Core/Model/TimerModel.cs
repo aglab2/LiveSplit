@@ -45,6 +45,10 @@ namespace LiveSplit.Model
                 CurrentState.StartTime = TimeStamp.Now;
                 CurrentState.TimePausedAt = CurrentState.Run.Offset;
                 CurrentState.IsGameTimeInitialized = false;
+                if( CurrentState.Run.Count > 0 ) {
+                    CurrentState.CurrentSplit.DeathCount = 0;
+                }
+
                 CurrentState.Run.AttemptCount++;
                 CurrentState.Run.HasChanged = true;
 
@@ -60,10 +64,11 @@ namespace LiveSplit.Model
             {
                 CurrentState.CurrentSplit.SplitTime = CurrentState.CurrentTime;
                 CurrentState.CurrentSplitIndex++;
-                if (CurrentState.Run.Count == CurrentState.CurrentSplitIndex)
-                {
+                if( CurrentState.Run.Count == CurrentState.CurrentSplitIndex ) {
                     CurrentState.CurrentPhase = TimerPhase.Ended;
                     CurrentState.AttemptEnded = TimeStamp.CurrentDateTime;
+                } else {
+                    CurrentState.CurrentSplit.DeathCount = 0;
                 }
                 CurrentState.Run.HasChanged = true;
 
@@ -78,6 +83,7 @@ namespace LiveSplit.Model
                 && CurrentState.CurrentSplitIndex < CurrentState.Run.Count - 1)
             {
                 CurrentState.CurrentSplit.SplitTime = default(Time);
+                CurrentState.CurrentSplit.DeathCount = -1;
                 CurrentState.CurrentSplitIndex++;
                 CurrentState.Run.HasChanged = true;
 
@@ -90,10 +96,15 @@ namespace LiveSplit.Model
             if (CurrentState.CurrentPhase != TimerPhase.NotRunning
                 && CurrentState.CurrentSplitIndex > 0)
             {
-                if (CurrentState.CurrentPhase == TimerPhase.Ended)
+                if( CurrentState.CurrentPhase == TimerPhase.Ended ) { 
                     CurrentState.CurrentPhase = TimerPhase.Running;
+                }
+
+                var undoneSplitDeaths = CurrentState.CurrentSplit.DeathCount;
+                CurrentState.CurrentSplit.DeathCount = -1;
                 CurrentState.CurrentSplitIndex--;
                 CurrentState.CurrentSplit.SplitTime = default(Time);
+                CurrentState.CurrentSplit.DeathCount += undoneSplitDeaths;
                 CurrentState.Run.HasChanged = true;
 
                 OnUndoSplit?.Invoke(this, null);
@@ -138,6 +149,7 @@ namespace LiveSplit.Model
             foreach (var split in CurrentState.Run)
             {
                 split.SplitTime = default(Time);
+                split.DeathCount = -1;
             }
 
             OnReset?.Invoke(this, oldPhase);
@@ -237,6 +249,10 @@ namespace LiveSplit.Model
                         newBestSegment.GameTime = currentSegmentGameTime;
                 }
                 split.BestSegmentTime = newBestSegment;
+
+                if( split.DeathCount >= 0 && ( split.DeathCount < split.BestDeathCount || split.BestDeathCount == -1 ) ) {
+                    split.BestDeathCount = split.DeathCount;
+                }
             }
         }
 
@@ -268,8 +284,10 @@ namespace LiveSplit.Model
         {
             CurrentState.Run.ImportSegmentHistory();
             CurrentState.Run.FixSplits();
-            foreach (var current in CurrentState.Run)
+            foreach( var current in CurrentState.Run ) { 
                 current.PersonalBestSplitTime = current.SplitTime;
+                current.PersonalBestDeathCount = current.DeathCount;
+            }
             CurrentState.Run.Metadata.RunID = null;
         }
     }
