@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Input;
+using System.Drawing;
 
 namespace LiveSplit.Options
 {
@@ -33,6 +34,7 @@ namespace LiveSplit.Options
         public IRaceViewer RaceViewer { get; set; }
         public IList<string> ActiveAutoSplitters { get; set; }
         public IDictionary<string, bool> ComparisonGeneratorStates { get; set; }
+        public Image DeathIcon { get; set; }
 
         public Settings()
         {
@@ -67,7 +69,8 @@ namespace LiveSplit.Options
                 AgreedToSRLRules = AgreedToSRLRules,
                 SimpleSumOfBest = SimpleSumOfBest,
                 ActiveAutoSplitters = new List<string>(ActiveAutoSplitters),
-                ComparisonGeneratorStates = new Dictionary<string, bool>(ComparisonGeneratorStates)
+                ComparisonGeneratorStates = new Dictionary<string, bool>(ComparisonGeneratorStates),
+                DeathIcon = DeathIcon
             };
         }
 

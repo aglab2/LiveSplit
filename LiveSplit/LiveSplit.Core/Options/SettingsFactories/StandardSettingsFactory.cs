@@ -4,12 +4,13 @@ using LiveSplit.Model.Input;
 using LiveSplit.Web.SRL.RaceViewers;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.Drawing;
 
 namespace LiveSplit.Options.SettingsFactories
 {
     public class StandardSettingsFactory : ISettingsFactory
     {
-        public ISettings Create()
+        public ISettings Create( Bitmap defaultDeathIcon )
         {
             return new Settings()
             {
@@ -39,7 +40,8 @@ namespace LiveSplit.Options.SettingsFactories
                     { PercentileComparisonGenerator.ComparisonName, false },
                     { LatestRunComparisonGenerator.ComparisonName, false },
                     { NoneComparisonGenerator.ComparisonName, false }
-                }
+                },
+                DeathIcon = defaultDeathIcon
             };
         }
     }

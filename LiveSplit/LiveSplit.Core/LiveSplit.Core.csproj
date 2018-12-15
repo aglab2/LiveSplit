@@ -25,7 +25,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\bin\Debug\LiveSplit.Core.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Prefer32Bit>false</Prefer32Bit>
@@ -120,6 +121,8 @@
     <Compile Include="Model\Comparisons\NoneComparisonGenerator.cs" />
     <Compile Include="Model\Comparisons\StandardComparisonGeneratorsFactory.cs" />
     <Compile Include="Model\Comparisons\PercentileComparisonGenerator.cs" />
+    <Compile Include="Model\DeathCounters\IDeathCounter.cs" />
+    <Compile Include="Model\DeathCounters\WindowTitleDeathCounter.cs" />
     <Compile Include="Model\NTP.cs" />
     <Compile Include="Model\DoubleTapPrevention.cs" />
     <Compile Include="Model\Input\CompositeHook.cs" />
@@ -177,6 +180,7 @@
     <Compile Include="UI\Components\IDeactivatableComponent.cs" />
     <Compile Include="UI\Components\LogicComponent.cs" />
     <Compile Include="UI\Components\SeparatorFactory.cs" />
+    <Compile Include="UI\DeathCountLabel.cs" />
     <Compile Include="UI\GradientType.cs" />
     <Compile Include="UI\GraphicsCache.cs" />
     <Compile Include="UI\ImageBlur.cs" />

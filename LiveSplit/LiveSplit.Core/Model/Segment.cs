@@ -21,6 +21,7 @@ namespace LiveSplit.Model
         public int BestDeathCount { get; set; }
         public int PersonalBestDeathCount { get; set; }
         public SegmentHistory SegmentHistory { get; set;}
+        public ISegment Parent { get; set; }
         
         public Segment( string name, Time pbSplitTime = default(Time),
             Time bestSegmentTime = default(Time), Image icon = null,
@@ -36,6 +37,7 @@ namespace LiveSplit.Model
             PersonalBestDeathCount = pbDeathCount;
             Icon = null;
             SegmentHistory = new SegmentHistory();
+            Parent = null;
         }
 
         public Segment Clone()

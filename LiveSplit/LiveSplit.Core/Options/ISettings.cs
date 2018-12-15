@@ -3,6 +3,7 @@ using LiveSplit.Model.Input;
 using LiveSplit.Web.SRL;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 
 namespace LiveSplit.Options
 {
@@ -56,6 +57,7 @@ namespace LiveSplit.Options
         IRaceViewer RaceViewer { get; set; }
         IList<string> ActiveAutoSplitters { get; set; }
         IDictionary<string, bool> ComparisonGeneratorStates { get; set; }
+        Image DeathIcon { get; set; }
 
         bool AgreedToSRLRules { get; set; }
 

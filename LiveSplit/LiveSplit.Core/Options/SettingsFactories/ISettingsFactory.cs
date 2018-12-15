@@ -1,7 +1,9 @@
-﻿namespace LiveSplit.Options.SettingsFactories
+﻿using System.Drawing;
+
+namespace LiveSplit.Options.SettingsFactories
 {
     public interface ISettingsFactory
     {
-        ISettings Create();
+        ISettings Create( Bitmap defaultDeathIcon );
     }
 }

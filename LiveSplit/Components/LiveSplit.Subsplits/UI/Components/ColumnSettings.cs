@@ -86,12 +86,17 @@ namespace LiveSplit.UI.Components
             cmbComparison.Items.Clear();
             cmbComparison.Items.Add("Current Comparison");
 
-            if (Data.Type == ColumnType.Delta || Data.Type == ColumnType.DeltaorSplitTime || Data.Type == ColumnType.SplitTime)
+            if( Data.Type == ColumnType.Delta || Data.Type == ColumnType.DeltaorSplitTime || Data.Type == ColumnType.SplitTime )
                 cmbComparison.Items.AddRange(CurrentState.Run.Comparisons.Where(x => x != NoneComparisonGenerator.ComparisonName).ToArray());
-            else
-            {
+            else if( Data.Type == ColumnType.DeathCount ) {
+                cmbComparison.Items.AddRange( CurrentState.Run.Comparisons.Where( x => x != BestSplitTimesComparisonGenerator.ComparisonName 
+                    && x != NoneComparisonGenerator.ComparisonName && x != AverageSegmentsComparisonGenerator.ComparisonName ).ToArray() );
+                if( Comparison == BestSplitTimesComparisonGenerator.ComparisonName || Comparison == AverageSegmentsComparisonGenerator.ComparisonName ) {
+                    Comparison = "Current Comparison";
+                }
+            } else {
                 cmbComparison.Items.AddRange(CurrentState.Run.Comparisons.Where(x => x != BestSplitTimesComparisonGenerator.ComparisonName && x != NoneComparisonGenerator.ComparisonName).ToArray());
-                if (Comparison == BestSplitTimesComparisonGenerator.ComparisonName)
+                if( Comparison == BestSplitTimesComparisonGenerator.ComparisonName )
                     Comparison = "Current Comparison";
             }
 
@@ -114,8 +119,10 @@ namespace LiveSplit.UI.Components
                 return "Segment Time";
             else if (type == ColumnType.SegmentDelta)
                 return "Segment Delta";
-            else
+            else if( type == ColumnType.SegmentDeltaorSegmentTime )
                 return "Segment Delta or Segment Time";
+            else 
+                return "Death Count";
         }
 
         private static ColumnType ParseColumnType(string columnType)

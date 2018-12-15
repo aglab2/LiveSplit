@@ -28,6 +28,7 @@ namespace LiveSplit.UI.Components
         protected SimpleLabel TimeLabel { get; set; }
         protected SimpleLabel MeasureTimeLabel { get; set; }
         protected SimpleLabel MeasureDeltaLabel { get; set; }
+        protected DeathCountLabel MeasureDeathCountLabel { get; set; }
         protected SimpleLabel DeltaLabel { get; set; }
         public SplitsSettings Settings { get; set; }
 
@@ -101,6 +102,7 @@ namespace LiveSplit.UI.Components
                 Text = ""
             };
             MeasureDeltaLabel = new SimpleLabel();
+            MeasureDeathCountLabel = new DeathCountLabel();
             Settings = settings;
             ColumnsList = columnsList;
             TimeFormatter = new RegularSplitTimeFormatter(Settings.SplitTimesAccuracy);
@@ -145,14 +147,20 @@ namespace LiveSplit.UI.Components
 
             MeasureTimeLabel.Text = TimeFormatter.Format(new TimeSpan(24, 0, 0));
             MeasureDeltaLabel.Text = DeltaTimeFormatter.Format(new TimeSpan(0, 9, 0, 0));
+            MeasureDeathCountLabel.Text = "9999";
 
             MeasureTimeLabel.Font = state.LayoutSettings.TimesFont;
             MeasureTimeLabel.IsMonospaced = true;
             MeasureDeltaLabel.Font = state.LayoutSettings.TimesFont;
             MeasureDeltaLabel.IsMonospaced = true;
+            MeasureDeathCountLabel.Font = state.LayoutSettings.TimesFont;
+            MeasureDeathCountLabel.IsMonospaced = true;
 
             MeasureTimeLabel.SetActualWidth(g);
             MeasureDeltaLabel.SetActualWidth(g);
+            MeasureDeathCountLabel.SetActualWidth(g);
+            MeasureDeathCountLabel.DeathIcon = state.Settings.DeathIcon;
+            MeasureDeathCountLabel.ActualWidth += state.Settings.DeathIcon.Width;
             TimeLabel.SetActualWidth(g);
             DeltaLabel.SetActualWidth(g);
 
@@ -300,6 +308,8 @@ namespace LiveSplit.UI.Components
                             labelWidth = Math.Max(MeasureDeltaLabel.ActualWidth, MeasureTimeLabel.ActualWidth);
                         else if (column.Type == ColumnType.Delta || column.Type == ColumnType.SegmentDelta)
                             labelWidth = MeasureDeltaLabel.ActualWidth;
+                        else if (column.Type == ColumnType.DeathCount)
+                            labelWidth = MeasureDeathCountLabel.ActualWidth;
                         else
                             labelWidth = MeasureTimeLabel.ActualWidth;
                         label.Width = labelWidth + 20;
@@ -350,14 +360,20 @@ namespace LiveSplit.UI.Components
 
             MeasureTimeLabel.Text = HeaderTimesFormatter.Format(new TimeSpan(24, 0, 0));
             MeasureDeltaLabel.Text = SectionTimerFormatter.Format(new TimeSpan(0, 9, 0, 0));
+            MeasureDeathCountLabel.Text = "9999";
 
             MeasureTimeLabel.Font = state.LayoutSettings.TimesFont;
             MeasureTimeLabel.IsMonospaced = true;
             MeasureDeltaLabel.Font = state.LayoutSettings.TimesFont;
             MeasureDeltaLabel.IsMonospaced = true;
+            MeasureDeathCountLabel.Font = state.LayoutSettings.TimesFont;
+            MeasureDeathCountLabel.IsMonospaced = true;
 
             MeasureTimeLabel.SetActualWidth(g);
             MeasureDeltaLabel.SetActualWidth(g);
+            MeasureDeathCountLabel.SetActualWidth(g);
+            MeasureDeathCountLabel.DeathIcon = state.Settings.DeathIcon;
+            MeasureDeathCountLabel.ActualWidth += state.Settings.DeathIcon.Width;
             TimeLabel.SetActualWidth(g);
             DeltaLabel.SetActualWidth(g);
 
@@ -640,6 +656,39 @@ namespace LiveSplit.UI.Components
             return splitColor;
         }
 
+        private Color GetDeathCountColor( LiveSplitState state, int currentDeaths, int targetDeaths, int lowestDeaths, bool isActive)
+        {
+            if (!isActive && (lowestDeaths == -1 || currentDeaths < lowestDeaths)) {
+                return state.LayoutSettings.BestSegmentColor;
+            }
+            if (targetDeaths == -1 || currentDeaths <= targetDeaths) {
+                return state.LayoutSettings.AheadGainingTimeColor;
+            }
+            return state.LayoutSettings.BehindLosingTimeColor;
+        }
+
+        private Color GetTargetDeathColor( LiveSplitState state, string comparison, ISegment split, bool isActive )
+        {
+            return GetTargetDeathColor( state, comparison, split.DeathCount, split.PersonalBestDeathCount, split.BestDeathCount, isActive );
+        }
+
+        private Color GetTargetDeathColor(LiveSplitState state, string comparison, int currentCount, int pbCount, int bestCount, bool isActive)
+        {
+            if (comparison == Run.PersonalBestComparisonName) {
+                return GetDeathCountColor(state, currentCount, pbCount, bestCount, isActive);
+            } else if (comparison == "Best Segments") {
+                return GetDeathCountColor(state, currentCount, bestCount, bestCount, isActive);
+            } else {
+                return state.LayoutSettings.TextColor;
+            }
+        }
+
+        private void UpdateDeathCount( SimpleLabel label, Color color, int count )
+        {
+            label.ForeColor = color;
+            label.Text = count.ToString();
+        }
+
         protected void UpdateAll(LiveSplitState state)
         {
             if (Split != null)
@@ -715,7 +764,7 @@ namespace LiveSplit.UI.Components
                 }
                 else
                 {
-                    RecreateLabels();
+                    RecreateLabels( state );
 
                     if (splitIndex < state.CurrentSplitIndex)
                     {
@@ -812,6 +861,9 @@ namespace LiveSplit.UI.Components
                     {
                         label.Text = DeltaTimeFormatter.Format(segmentDelta);
                     }
+                } else if (type == ColumnType.DeathCount) {
+                    var color = GetTargetDeathColor(state, comparison, Split, false);
+                    UpdateDeathCount( label, color, Split.DeathCount );
                 }
             }
             else
@@ -856,6 +908,16 @@ namespace LiveSplit.UI.Components
                 {
                     label.Text = "";
                 }
+
+                // Live death count.
+                if( type == ColumnType.DeathCount ) {
+                    if( IsActive ) {
+                        var color = GetTargetDeathColor( state, comparison, Split, true );
+                        UpdateDeathCount( label, color, Split.DeathCount );
+                    } else {
+                        label.Text = "";
+                    }
+                }
             }
         }
 
@@ -875,6 +937,30 @@ namespace LiveSplit.UI.Components
                 }
             }
             return null;
+        }
+
+        protected void CountDeathSum(LiveSplitState state, int splitIndex, out int currentCount, out int pbCount)
+        {
+            var run = state.Run;
+            var dCountValue = run[splitIndex].DeathCount;
+            var cCount = dCountValue == -1 ? 0 : dCountValue;
+            var pCount = run[splitIndex].PersonalBestDeathCount;
+
+            bool hasUnknownPB = pCount == -1;
+            for (int i = splitIndex - 1; i >= 0; i--) {
+                var split = run[i];
+                if (split.Name.Length == 0 || split.Name[0] != '-') {
+                    break;
+                }
+                if( split.DeathCount > 0 ) {
+                    cCount += split.DeathCount;
+                }
+                pCount += split.PersonalBestDeathCount;
+                hasUnknownPB &= split.PersonalBestDeathCount == -1;
+            }
+
+            currentCount = cCount;
+            pbCount = hasUnknownPB ? -1 : pCount;
         }
 
         protected void UpdateCollapsedColumn(LiveSplitState state, SimpleLabel label, ColumnData data)
@@ -952,6 +1038,12 @@ namespace LiveSplit.UI.Components
                     {
                         label.Text = DeltaTimeFormatter.Format(segmentDelta);
                     }
+                } else if (type == ColumnType.DeathCount) {
+                    int pbSumDeaths;
+                    int currentSumDeaths;
+                    CountDeathSum(state, splitIndex, out currentSumDeaths, out pbSumDeaths);
+                    var deathColor = GetTargetDeathColor(state, comparison, currentSumDeaths, pbSumDeaths, 0, true);
+                    UpdateDeathCount(label, deathColor, currentSumDeaths);
                 }
             }
             else
@@ -987,6 +1079,18 @@ namespace LiveSplit.UI.Components
                 {
                     label.Text = "";
                 }
+                // Live death count.
+                if (type == ColumnType.DeathCount) {
+                    if (IsActive) {
+                        int pbSumDeaths;
+                        int currentSumDeaths;
+                        CountDeathSum(state, splitIndex, out currentSumDeaths, out pbSumDeaths);
+                        var deathColor = GetTargetDeathColor(state, comparison, currentSumDeaths, pbSumDeaths, 0, true);
+                        UpdateDeathCount(label, deathColor, currentSumDeaths);
+                    } else {
+                        label.Text = "";
+                    }
+                }
             }
         }
 
@@ -1010,24 +1114,34 @@ namespace LiveSplit.UI.Components
                 var mixedCount = ColumnsList.Count(x => x.Type == ColumnType.DeltaorSplitTime || x.Type == ColumnType.SegmentDeltaorSegmentTime);
                 var deltaCount = ColumnsList.Count(x => x.Type == ColumnType.Delta || x.Type == ColumnType.SegmentDelta);
                 var timeCount = ColumnsList.Count(x => x.Type == ColumnType.SplitTime || x.Type == ColumnType.SegmentTime);
+                var deathCount = ColumnsList.Count(x => x.Type == ColumnType.DeathCount);
                 return mixedCount * (Math.Max(MeasureDeltaLabel.ActualWidth, MeasureTimeLabel.ActualWidth) + 5)
                     + deltaCount * (MeasureDeltaLabel.ActualWidth + 5)
-                    + timeCount * (MeasureTimeLabel.ActualWidth + 5);
+                    + timeCount * (MeasureTimeLabel.ActualWidth + 5)
+                    + deathCount * (MeasureDeathCountLabel.ActualWidth + 5);
             }
             return 0f;
         }
 
-        protected void RecreateLabels()
+        protected void RecreateLabels(LiveSplitState state )
         {
             if (ColumnsList != null && LabelsList.Count != ColumnsList.Count())
             {
                 LabelsList.Clear();
                 foreach (var column in ColumnsList)
                 {
-                    LabelsList.Add(new SimpleLabel
-                    {
-                        HorizontalAlignment = StringAlignment.Far
-                    });
+                    if( column.Type == ColumnType.DeathCount ) {
+                        LabelsList.Add( new DeathCountLabel
+                        {
+                            DeathIcon = state.Settings.DeathIcon,
+                            HorizontalAlignment = StringAlignment.Far
+                        });
+                    } else {
+                        LabelsList.Add(new SimpleLabel
+                        {
+                            HorizontalAlignment = StringAlignment.Far
+                        });
+                    }
                 }
             }
         }

@@ -16,5 +16,6 @@ namespace LiveSplit.Model
         int BestDeathCount { get; set; }
         int PersonalBestDeathCount { get; set; }
         SegmentHistory SegmentHistory { get; set; }
+        ISegment Parent { get; }
     }
 }

@@ -95,6 +95,11 @@ namespace LiveSplit.Model
                 InternalModel.UndoSplit();
         }
 
+        public void AddDeaths(int addCount)
+        {
+            InternalModel.AddDeaths( addCount );
+        }
+
         public void Reset() => Reset(true);
 
         public void Reset(bool updateSplits = true)

@@ -4,6 +4,7 @@ using LiveSplit.Model.Input;
 using LiveSplit.Model.RunFactories;
 using LiveSplit.Web.SRL;
 using System;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Xml;
@@ -20,11 +21,11 @@ namespace LiveSplit.Options.SettingsFactories
             Stream = stream;
         }
 
-        public ISettings Create()
+        public ISettings Create( Bitmap defaultDeathIcon )
         {
             var document = new XmlDocument();
             document.Load(Stream);
-            var settings = new StandardSettingsFactory().Create();
+            var settings = new StandardSettingsFactory().Create( defaultDeathIcon );
 
             var parent = document["Settings"];
             var version = ParseAttributeVersion(parent);

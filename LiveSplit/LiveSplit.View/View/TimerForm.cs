@@ -1,5 +1,6 @@
 ﻿using LiveSplit.Model;
 using LiveSplit.Model.Comparisons;
+using LiveSplit.Model.DeathCounters;
 using LiveSplit.Model.Input;
 using LiveSplit.Model.RunFactories;
 using LiveSplit.Model.RunImporters;
@@ -48,6 +49,7 @@ namespace LiveSplit.View
         public LiveSplitState CurrentState { get; set; }
         protected ITimerModel Model { get; set; }
         protected CompositeHook Hook { get; set; }
+        private IDeathCounter DeathCounter { get; set; }
         protected bool IsInDialogMode { get; set; }
         protected bool ResetMessageShown { get; set; }
         public new ILayout Layout
@@ -149,6 +151,7 @@ namespace LiveSplit.View
             ComparisonGeneratorsFactory = new StandardComparisonGeneratorsFactory();
 
             Model = new DoubleTapPrevention(new TimerModel());
+            DeathCounter = new WindowTitleDeathCounter();
 
             RunFactory = new StandardFormatsRunFactory();
             RunSaver = new XMLRunSaver();
@@ -1067,6 +1070,8 @@ namespace LiveSplit.View
 
                         if (CurrentState.Run.IsAutoSplitterActive())
                             CurrentState.Run.AutoSplitter.Component.Update(null, CurrentState, 0, 0, Layout.Mode);
+
+                        Model.AddDeaths( DeathCounter.UpdateDeathDelta() );
 
                         if (DontRedraw)
                             return;
@@ -2313,13 +2318,13 @@ namespace LiveSplit.View
             {
                 using (var stream = File.OpenRead(Path.Combine(BasePath, SETTINGS_PATH)))
                 {
-                    Settings = new XMLSettingsFactory(stream).Create();
+                    Settings = new XMLSettingsFactory(stream).Create( Properties.Resources.DefaultDeathIcon );
                 }
             }
             catch (Exception e)
             {
                 Log.Error(e);
-                Settings = new StandardSettingsFactory().Create();
+                Settings = new StandardSettingsFactory().Create( Properties.Resources.DefaultDeathIcon );
             }
         }
 

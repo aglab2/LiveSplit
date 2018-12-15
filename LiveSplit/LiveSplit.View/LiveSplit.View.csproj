@@ -225,6 +225,7 @@
     <None Include="Resources\Configure.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\DefaultDeathIcon.png" />
     <Content Include="Resources\DefaultGameIcon.png" />
     <Content Include="Resources\Icon.ico" />
     <Content Include="Resources\DownArrow.png" />

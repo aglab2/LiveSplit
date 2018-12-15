@@ -90,7 +90,42 @@ namespace LiveSplit.UI
             };
         }
 
-        public void Draw(Graphics g)
+        protected void DrawMonospaced( Graphics g )
+        {
+            var monoFormat = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = VerticalAlignment
+            };
+
+            var measurement = MeasureText(g, "0", Font, new Size((int)(Width + 0.5f), (int)(Height + 0.5f)), TextFormatFlags.NoPadding).Width;
+            var offset = Width;
+            var charIndex = 0;
+            SetActualWidth(g);
+            var cutOffText = CutOff(g);
+
+            offset = Width - MeasureActualWidth(cutOffText, g);
+            if (HorizontalAlignment != StringAlignment.Far)
+                offset = 0f;
+
+
+            while (charIndex < cutOffText.Length) {
+                var curOffset = 0f;
+                var curChar = cutOffText[charIndex];
+
+                if (char.IsDigit(curChar))
+                    curOffset = measurement;
+                else
+                    curOffset = MeasureText(g, curChar.ToString(), Font, new Size((int)(Width + 0.5f), (int)(Height + 0.5f)), TextFormatFlags.NoPadding).Width;
+
+                DrawText(curChar.ToString(), g, X + offset - curOffset / 2f, Y, curOffset * 2f, Height, monoFormat);
+
+                charIndex++;
+                offset += curOffset;
+            }
+        }
+
+        public virtual void Draw(Graphics g)
         {
             Format.Alignment = HorizontalAlignment;
             Format.LineAlignment = VerticalAlignment;
@@ -102,38 +137,7 @@ namespace LiveSplit.UI
             }
             else
             {
-                var monoFormat = new StringFormat
-                {
-                    Alignment = StringAlignment.Center,
-                    LineAlignment = VerticalAlignment
-                };
-
-                var measurement = MeasureText(g, "0", Font, new Size((int)(Width + 0.5f), (int)(Height + 0.5f)), TextFormatFlags.NoPadding).Width;
-                var offset = Width;
-                var charIndex = 0;
-                SetActualWidth(g);
-                var cutOffText = CutOff(g);
-
-                offset = Width - MeasureActualWidth(cutOffText, g);
-                if (HorizontalAlignment != StringAlignment.Far)
-                    offset = 0f;
-
-
-                while (charIndex < cutOffText.Length)
-                {
-                    var curOffset = 0f;
-                    var curChar = cutOffText[charIndex];
-
-                    if (char.IsDigit(curChar))
-                        curOffset = measurement;
-                    else
-                        curOffset = MeasureText(g, curChar.ToString(), Font, new Size((int)(Width + 0.5f), (int)(Height + 0.5f)), TextFormatFlags.NoPadding).Width;
-
-                    DrawText(curChar.ToString(), g, X + offset - curOffset / 2f, Y, curOffset * 2f, Height, monoFormat);
-
-                    charIndex++;
-                    offset += curOffset;
-                }
+                DrawMonospaced( g );
             }
         }
 
