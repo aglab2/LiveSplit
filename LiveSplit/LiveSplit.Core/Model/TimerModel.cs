@@ -90,6 +90,9 @@ namespace LiveSplit.Model
                     }
                     if( CurrentState.Run.Count != CurrentState.CurrentSplitIndex ) {
                         CurrentState.CurrentSplit.DeathCount = 0;
+                        if( CurrentState.CurrentSplit.Parent != null && !object.ReferenceEquals( CurrentState.CurrentSplit.Parent, prevSplit.Parent ) ) {
+                            CurrentState.CurrentSplit.Parent.DeathCount = 0;
+                        }
                     }
                 }
 
@@ -101,8 +104,22 @@ namespace LiveSplit.Model
         public void DoSkipSplit()
         {
             CurrentState.CurrentSplit.SplitTime = default(Time);
-            CurrentState.CurrentSplit.DeathCount = -1;
             CurrentState.CurrentSplitIndex++;
+        }
+
+        private bool CheckAllSkipped()
+        {
+            var currentParent = CurrentState.CurrentSplit;
+            for( int i = CurrentState.CurrentSplitIndex - 1; i >= 0; i-- ) {
+                if( object.ReferenceEquals( CurrentState.Run[i].Parent, currentParent ) ) {
+                    if( CurrentState.Run[i].DeathCount != -1 ) {
+                        return false;
+                    }
+                } else {
+                    break;
+                }
+            }
+            return true;
         }
 
         public void SkipSplit()
@@ -111,12 +128,23 @@ namespace LiveSplit.Model
                 || CurrentState.CurrentPhase == TimerPhase.Paused)
                 && CurrentState.CurrentSplitIndex < CurrentState.Run.Count - 1)
             {
+                var prevSplit = CurrentState.CurrentSplit;
                 var newCurrentSplit = CurrentState.Run[CurrentState.CurrentSplitIndex + 1];
-                var isNextParent = IsParentOf( newCurrentSplit, CurrentState.CurrentSplit );
+                var isNextParent = IsParentOf( newCurrentSplit, prevSplit);
                 if( !isNextParent || CurrentState.CurrentSplitIndex < CurrentState.Run.Count - 2 ) {
+                    CurrentState.CurrentSplit.DeathCount = -1;
                     DoSkipSplit();
-                    if( isNextParent ) {
+                    if ( isNextParent ) {
+                        if( CheckAllSkipped() ) {
+                            CurrentState.CurrentSplit.DeathCount = -1;
+                        }
                         DoSkipSplit();
+                    }
+                    if (CurrentState.Run.Count != CurrentState.CurrentSplitIndex) {
+                        CurrentState.CurrentSplit.DeathCount = 0;
+                        if ( CurrentState.CurrentSplit.Parent != null && !object.ReferenceEquals(CurrentState.CurrentSplit.Parent, prevSplit.Parent)) {
+                            CurrentState.CurrentSplit.Parent.DeathCount = 0;
+                        }
                     }
 
                     CurrentState.Run.HasChanged = true;
@@ -125,10 +153,15 @@ namespace LiveSplit.Model
             }
         }
 
-        private void DoUndoSplit()
+        private void DoUndoSplit( int undoneSplitDeaths )
         {
             CurrentState.CurrentSplitIndex--;
             CurrentState.CurrentSplit.SplitTime = default(Time);
+
+            if (CurrentState.CurrentSplit.DeathCount == -1) {
+                CurrentState.CurrentSplit.DeathCount = 0;
+            }
+            CurrentState.CurrentSplit.DeathCount += undoneSplitDeaths;
         }
 
         public void UndoSplit()
@@ -140,14 +173,17 @@ namespace LiveSplit.Model
                     CurrentState.CurrentPhase = TimerPhase.Running;
                 }
 
-                var undoneSplitDeaths = CurrentState.CurrentSplit.DeathCount;
+                var undoneSplitDeaths = Math.Max( CurrentState.CurrentSplit.DeathCount, 0 );
                 CurrentState.CurrentSplit.DeathCount = -1;
-                DoUndoSplit();
-                CurrentState.CurrentSplit.DeathCount += undoneSplitDeaths;
+                var prevParent = CurrentState.CurrentSplit.Parent;
+                DoUndoSplit( undoneSplitDeaths );
 
-                if( CurrentState.CurrentSplitIndex > 0 && IsParentOf( CurrentState.CurrentSplit, CurrentState.Run[CurrentState.CurrentSplitIndex - 1] ) ) {
-                    DoUndoSplit();
-                    CurrentState.CurrentSplit.DeathCount += undoneSplitDeaths;
+                if (prevParent != null && prevParent != CurrentState.CurrentSplit.Parent) {
+                    prevParent.DeathCount = -1;
+                }
+
+                if ( CurrentState.CurrentSplitIndex > 0 && IsParentOf( CurrentState.CurrentSplit, CurrentState.Run[CurrentState.CurrentSplitIndex - 1] ) ) {
+                    DoUndoSplit( undoneSplitDeaths );
                 }
 
                 CurrentState.Run.HasChanged = true;
@@ -281,6 +317,10 @@ namespace LiveSplit.Model
 
         public void UpdateBestSegments()
         {
+            ISegment currentParent = null;
+            TimeSpan? parentStartTimeRTA = TimeSpan.Zero;
+            TimeSpan? parentStartGameTime = TimeSpan.Zero;
+
             TimeSpan? currentSegmentRTA = TimeSpan.Zero;
             TimeSpan? previousSplitTimeRTA = TimeSpan.Zero;
             TimeSpan? currentSegmentGameTime = TimeSpan.Zero;
@@ -288,20 +328,37 @@ namespace LiveSplit.Model
             foreach (var split in CurrentState.Run)
             {
                 var newBestSegment = new Time(split.BestSegmentTime);
+
+                if (currentParent != split.Parent && currentParent == null) {
+                    parentStartTimeRTA = previousSplitTimeRTA;
+                    parentStartGameTime = previousSplitTimeGameTime;
+                }
+
                 if (split.SplitTime.RealTime != null)
                 {
-                    currentSegmentRTA = split.SplitTime.RealTime - previousSplitTimeRTA;
+                    if( currentParent == split ) {
+                        currentSegmentRTA = split.SplitTime.RealTime - parentStartTimeRTA;
+                    } else {
+                        currentSegmentRTA = split.SplitTime.RealTime - previousSplitTimeRTA;
+                    }
+
                     previousSplitTimeRTA = split.SplitTime.RealTime;
                     if (split.BestSegmentTime.RealTime == null || currentSegmentRTA < split.BestSegmentTime.RealTime)
                         newBestSegment.RealTime = currentSegmentRTA;
                 }
                 if (split.SplitTime.GameTime != null)
                 {
-                    currentSegmentGameTime = split.SplitTime.GameTime - previousSplitTimeGameTime;
+                    if (currentParent == split) {
+                        currentSegmentGameTime = split.SplitTime.GameTime - parentStartGameTime;
+                    } else {
+                        currentSegmentGameTime = split.SplitTime.GameTime - previousSplitTimeGameTime;
+                    }
+
                     previousSplitTimeGameTime = split.SplitTime.GameTime;
                     if (split.BestSegmentTime.GameTime == null || currentSegmentGameTime < split.BestSegmentTime.GameTime)
                         newBestSegment.GameTime = currentSegmentGameTime;
                 }
+                currentParent = split.Parent;
                 split.BestSegmentTime = newBestSegment;
 
                 if( split.DeathCount >= 0 && ( split.DeathCount < split.BestDeathCount || split.BestDeathCount == -1 ) ) {

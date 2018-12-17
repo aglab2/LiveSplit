@@ -84,12 +84,26 @@ namespace LiveSplit.Model.RunFactories
 
             var segmentsNode = parent["Segments"];
 
+            Segment currentParent = null;
             foreach (var segmentNode in segmentsNode.GetElementsByTagName("Segment"))
             {
                 var segmentElement = segmentNode as XmlElement;
 
-                var split = new Segment(ParseString(segmentElement["Name"]));
-                split.Icon = GetImageFromElement(segmentElement["Icon"]);
+                Segment split;
+                var splitName = ParseString(segmentElement["Name"]);
+                if( splitName.StartsWith( "-" ) ) {
+                    if( currentParent == null ) {
+                        currentParent = new Segment("");
+                    }
+                    split = new Segment( splitName );
+                    split.Parent = currentParent;
+                } else if( currentParent != null ) {
+                    split = currentParent;
+                    split.Name = splitName;
+                    currentParent = null;
+                } else {
+                    split = new Segment( splitName );
+                }
 
                 if (version >= new Version(1, 3))
                 {
@@ -145,6 +159,10 @@ namespace LiveSplit.Model.RunFactories
                 }
 
                 run.Add(split);
+            }
+
+            if( currentParent != null ) {
+                run.Add( currentParent );
             }
 
             if (version >= new Version(1, 4, 2))

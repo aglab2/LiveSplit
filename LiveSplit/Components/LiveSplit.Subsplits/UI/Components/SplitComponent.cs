@@ -625,10 +625,19 @@ namespace LiveSplit.UI.Components
             return getSectionTime(state, splitNumber, topNumber, comparison, method) - getSectionComparison(state, splitNumber, topNumber, comparison, method);
         }
 
-        private Color? GetSectionColor(LiveSplitState state, TimeSpan? timeDifference, TimeSpan? delta)
+        private TimeSpan? getBestTime(LiveSplitState state, int splitNumber, TimingMethod method)
         {
-            Color? splitColor = null;
+            return state.Run[splitNumber].BestSegmentTime[method];
+        }
 
+        private Color? GetSectionColor(LiveSplitState state, TimeSpan? timeDifference, TimeSpan? delta, TimeSpan? segmentTime, TimeSpan? bestSegment)
+        {
+            bool isBestTime = bestSegment == null || (segmentTime != null && segmentTime < bestSegment);
+            if (state.LayoutSettings.ShowBestSegments && isBestTime) {
+                return LiveSplitStateHelper.GetBestSegmentColor(state);
+            }
+
+            Color? splitColor = null;
             if (timeDifference != null)
             {
                 if (timeDifference < TimeSpan.Zero)
@@ -658,8 +667,11 @@ namespace LiveSplit.UI.Components
 
         private Color GetDeathCountColor( LiveSplitState state, int currentDeaths, int targetDeaths, int lowestDeaths, bool isActive)
         {
+            if( currentDeaths == -1 ) {
+                return state.LayoutSettings.TextColor;
+            }
             if (!isActive && (lowestDeaths == -1 || currentDeaths < lowestDeaths)) {
-                return state.LayoutSettings.BestSegmentColor;
+                return LiveSplitStateHelper.GetBestSegmentColor(state);
             }
             if (targetDeaths == -1 || currentDeaths <= targetDeaths) {
                 return state.LayoutSettings.AheadGainingTimeColor;
@@ -686,7 +698,7 @@ namespace LiveSplit.UI.Components
         private void UpdateDeathCount( SimpleLabel label, Color color, int count )
         {
             label.ForeColor = color;
-            label.Text = count.ToString();
+            label.Text = count >= 0 ? count.ToString() : "--";
         }
 
         protected void UpdateAll(LiveSplitState state)
@@ -704,14 +716,7 @@ namespace LiveSplit.UI.Components
                     NameLabel.Text = Split.Name.Substring(1);
                 else
                 {
-                    Match match = SubsplitRegex.Match(Split.Name);
-                    if (match.Success) {
-                        if (CollapsedSplit || Header)
-                            NameLabel.Text = match.Groups[1].Value;
-                        else
-                            NameLabel.Text = match.Groups[2].Value;
-                    } else
-                        NameLabel.Text = Split.Name;
+                    NameLabel.Text = Split.Name;
                 }
 
                 var splitIndex = state.Run.IndexOf(Split);
@@ -728,13 +733,17 @@ namespace LiveSplit.UI.Components
                     else if (Settings.HeaderTimingMethod == "Game Time")
                         timingMethod = TimingMethod.GameTime;
 
-                    TimeSpan? deltaTime = getSectionDelta(state, splitIndex, TopSplit, comparison, timingMethod);
+
+                    var segmentTime = getSectionTime(state, splitIndex, TopSplit, comparison, timingMethod);
+                    TimeSpan? deltaTime = segmentTime - getSectionComparison(state, splitIndex, TopSplit, comparison, timingMethod);
                     if ((splitIndex >= state.CurrentSplitIndex) && (deltaTime < TimeSpan.Zero))
                     {
                         deltaTime = null;
                     }
 
-                    var color = GetSectionColor(state, null, deltaTime);
+                    var bestSegment = getBestTime(state, splitIndex, timingMethod);
+
+                    var color = GetSectionColor(state, null, deltaTime, segmentTime, bestSegment);
                     if (color == null)
                         color = Settings.OverrideHeaderColor ? Settings.HeaderTimesColor : state.LayoutSettings.TextColor;
                     TimeLabel.ForeColor = color.Value;
@@ -998,8 +1007,10 @@ namespace LiveSplit.UI.Components
                 if (type == ColumnType.DeltaorSplitTime || type == ColumnType.Delta)
                 {
                     var deltaTime = Split.SplitTime[timingMethod] - Split.Comparisons[comparison][timingMethod];
-                    var segmentDelta = getSectionDelta(state, splitIndex, TopSplit, comparison, timingMethod);
-                    var color = GetSectionColor(state, deltaTime, segmentDelta);
+                    var segmentTime = getSectionTime(state, splitIndex, TopSplit, comparison, timingMethod);
+                    var segmentDelta = segmentTime - getSectionComparison(state, splitIndex, TopSplit, comparison, timingMethod);
+                    var bestSegment = getBestTime(state, splitIndex, timingMethod);
+                    var color = GetSectionColor(state, deltaTime, segmentDelta, segmentTime, bestSegment);
                     if (color == null)
                         color = Settings.OverrideTimesColor ? Settings.BeforeTimesColor : state.LayoutSettings.TextColor;
                     label.ForeColor = color.Value;
@@ -1018,8 +1029,10 @@ namespace LiveSplit.UI.Components
 
                 else if (type == ColumnType.SegmentDeltaorSegmentTime || type == ColumnType.SegmentDelta)
                 {
-                    var segmentDelta = getSectionDelta(state, splitIndex, TopSplit, comparison, timingMethod);
-                    var color = GetSectionColor(state, null, segmentDelta);
+                    var segmentTime = getSectionTime(state, splitIndex, TopSplit, comparison, timingMethod);
+                    var segmentDelta = segmentTime - getSectionComparison(state, splitIndex, TopSplit, comparison, timingMethod);
+                    var bestSegment = getBestTime(state, splitIndex, timingMethod);
+                    var color = GetSectionColor(state, null, segmentDelta, segmentTime, bestSegment);
                     if (color == null)
                         color = Settings.OverrideTimesColor ? Settings.BeforeTimesColor : state.LayoutSettings.TextColor;
                     label.ForeColor = color.Value;
@@ -1030,7 +1043,6 @@ namespace LiveSplit.UI.Components
                             label.Text = DeltaTimeFormatter.Format(segmentDelta);
                         else
                         {
-                            var segmentTime = getSectionTime(state, splitIndex, TopSplit, comparison, timingMethod);
                             label.Text = TimeFormatter.Format(segmentTime);
                         }
                     }
@@ -1039,11 +1051,8 @@ namespace LiveSplit.UI.Components
                         label.Text = DeltaTimeFormatter.Format(segmentDelta);
                     }
                 } else if (type == ColumnType.DeathCount) {
-                    int pbSumDeaths;
-                    int currentSumDeaths;
-                    CountDeathSum(state, splitIndex, out currentSumDeaths, out pbSumDeaths);
-                    var deathColor = GetTargetDeathColor(state, comparison, currentSumDeaths, pbSumDeaths, 0, true);
-                    UpdateDeathCount(label, deathColor, currentSumDeaths);
+                    var deathColor = GetTargetDeathColor(state, comparison, Split, false);
+                    UpdateDeathCount(label, deathColor, Split.DeathCount);
                 }
             }
             else
@@ -1082,11 +1091,8 @@ namespace LiveSplit.UI.Components
                 // Live death count.
                 if (type == ColumnType.DeathCount) {
                     if (IsActive) {
-                        int pbSumDeaths;
-                        int currentSumDeaths;
-                        CountDeathSum(state, splitIndex, out currentSumDeaths, out pbSumDeaths);
-                        var deathColor = GetTargetDeathColor(state, comparison, currentSumDeaths, pbSumDeaths, 0, true);
-                        UpdateDeathCount(label, deathColor, currentSumDeaths);
+                       var deathColor = GetTargetDeathColor(state, comparison, Split, true);
+                       UpdateDeathCount(label, deathColor, Split.DeathCount);
                     } else {
                         label.Text = "";
                     }

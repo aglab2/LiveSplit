@@ -211,7 +211,7 @@ namespace LiveSplit.Model
             return targetSplit.BestDeathCount == -1 || targetSplit.DeathCount < targetSplit.BestDeathCount;
         }
 
-        private static Color GetBestSegmentColor(LiveSplitState state)
+        public static Color GetBestSegmentColor(LiveSplitState state)
         {
             if (state.LayoutSettings.UseRainbowColor)
             {

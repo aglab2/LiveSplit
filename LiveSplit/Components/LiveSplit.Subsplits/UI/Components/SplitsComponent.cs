@@ -32,7 +32,8 @@ namespace LiveSplit.UI.Components
 
         private SectionList sectionList;
 
-        protected int ScrollOffset { get; set; }
+        private int ScrollOffset { get; set; }
+        private int ScrollDelta { get; set; }
         protected int LastSplitSeparatorIndex { get; set; }
         private int lastSplitOfSection { get; set; }
 
@@ -214,21 +215,25 @@ namespace LiveSplit.UI.Components
         void state_OnUndoSplit(object sender, EventArgs e)
         {
             ScrollOffset = 0;
+            ScrollDelta = 0;
         }
 
         void state_OnSkipSplit(object sender, EventArgs e)
         {
             ScrollOffset = 0;
+            ScrollDelta = 0;
         }
 
         void state_OnSplit(object sender, EventArgs e)
         {
             ScrollOffset = 0;
+            ScrollDelta = 0;
         }
 
         void state_OnReset(object sender, TimerPhase e)
         {
             ScrollOffset = 0;
+            ScrollDelta = 0;
         }
 
         private sealed class SectionList
@@ -307,16 +312,17 @@ namespace LiveSplit.UI.Components
         void state_OnStart(object sender, EventArgs e)
         {
             ScrollOffset = 0;
+            ScrollDelta = 0;
         }
 
         void state_OnScrollUp(object sender, EventArgs e)
         {
-            ScrollOffset--;
+            ScrollDelta--;
         }
 
         void state_OnScrollDown(object sender, EventArgs e)
         {
-            ScrollOffset++;
+            ScrollDelta++;
         }
 
         void DrawBackground(Graphics g, float width, float height)
@@ -370,6 +376,25 @@ namespace LiveSplit.UI.Components
             return Settings.GetSettings(document);
         }
 
+        private void UpdateScrollOffset( LiveSplitState state, int runningSectionIndex )
+        {
+            if ( ScrollDelta == 0 ) {
+                return;
+            }
+            var newOffset = ScrollOffset + ScrollDelta;
+            newOffset = Math.Min(Math.Max(newOffset, -runningSectionIndex), state.Run.Count - runningSectionIndex - 1);
+
+            var split = runningSectionIndex + newOffset;
+            var splitSectionPos = sectionList.getSection(split);
+            var section = sectionList.Sections[splitSectionPos];
+            if( section.getSubsplitCount() != 0 && section.endIndex == split && !Settings.HideSubsplits ) {
+                newOffset += Math.Sign( ScrollDelta );
+            }
+
+            ScrollOffset = newOffset;
+            ScrollDelta = 0;
+        }
+
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
         {
             if (state.Run != previousRun)
@@ -379,8 +404,8 @@ namespace LiveSplit.UI.Components
             }
 
             var runningSectionIndex = Math.Min(Math.Max(state.CurrentSplitIndex, 0), state.Run.Count - 1);
-            ScrollOffset = Math.Min(Math.Max(ScrollOffset, -runningSectionIndex), state.Run.Count - runningSectionIndex - 1);
-            var currentSplit = ScrollOffset + runningSectionIndex;
+            UpdateScrollOffset(state, runningSectionIndex);
+            var currentSplit = runningSectionIndex + ScrollOffset;
             var currentSection = sectionList.getSection(currentSplit);
             runningSectionIndex = sectionList.getSection(runningSectionIndex);
             if (sectionList.Sections[currentSection].getSubsplitCount() > 0)
@@ -582,12 +607,30 @@ namespace LiveSplit.UI.Components
                 InternalComponent.Update(invalidator, state, width, height, mode);
         }
 
+        private bool IsSectionGlobalSplit( int split )
+        {
+            var splitSection = sectionList.getSection(split);
+            var section = sectionList.Sections[splitSection];
+            return section.getSubsplitCount() != 0 && section.endIndex == split;
+        }
+    
+        private bool IsSplitHidden( int sectionPos, int currentSection, int split )
+        {
+            var section = sectionList.Sections[sectionPos];
+            return section.getSubsplitCount() == 0 || section.endIndex != split || sectionPos != currentSection || Settings.HideSubsplits;
+        }
+
         private bool ShouldIncludeSplit(int currentSection, int split)
         {
-            return (sectionList.isMajorSplit(split)
-                       && (!Settings.CurrentSectionOnly || sectionList.getSection(split) == currentSection)) ||
+            var splitSection = sectionList.getSection( split );
+            var section = sectionList.Sections[splitSection];
+            var includeBasedOnSettings = (sectionList.isMajorSplit(split)
+                        && IsSplitHidden( splitSection, currentSection, split )
+                       && (!Settings.CurrentSectionOnly || splitSection == currentSection)) ||
                    (!sectionList.isMajorSplit(split)
-                       && (Settings.ShowSubsplits || (!Settings.HideSubsplits && sectionList.getSection(split) == currentSection)));
+                       && (Settings.ShowSubsplits || (!Settings.HideSubsplits && splitSection == currentSection)));
+
+            return includeBasedOnSettings;
         }
 
         public void Dispose()
