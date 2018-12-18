@@ -217,6 +217,13 @@ namespace LiveSplit.Model
 
                 if (updateSplits)
                 {
+                    if( CurrentState.CurrentSplitIndex >= 0 && CurrentState.CurrentSplitIndex < CurrentState.Run.Count ) {
+                        CurrentState.CurrentSplit.DeathCount = -1;
+                        if( CurrentState.CurrentSplit.Parent != null ) {
+                            CurrentState.CurrentSplit.Parent.DeathCount = -1;
+                        }
+                    }
+
                     UpdateAttemptHistory();
                     UpdateBestSegments();
                     UpdatePBSplits();

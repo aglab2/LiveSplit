@@ -40,7 +40,7 @@ namespace LiveSplit.Model
             Parent = null;
         }
 
-        public Segment Clone()
+        public ISegment CopySegment()
         {
             var newSegmentHistory = SegmentHistory.Clone();
 
@@ -53,10 +53,9 @@ namespace LiveSplit.Model
                 BestDeathCount = BestDeathCount,
                 PersonalBestDeathCount = PersonalBestDeathCount,
                 SegmentHistory = newSegmentHistory,
-                Comparisons = (IComparisons)Comparisons.Clone()
+                Comparisons = (IComparisons)Comparisons.Clone(),
+                Parent = Parent
             };
         }
-
-        object ICloneable.Clone() => Clone();
     }
 }

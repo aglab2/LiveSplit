@@ -107,13 +107,33 @@ namespace LiveSplit.Model
             Metadata = new RunMetadata(this);
         }
 
+        private List<ISegment> CloneInternallList( IEnumerable<ISegment> collection )
+        {
+            var result = new List<ISegment>();
+            ISegment currentParent = null;
+            ISegment currentParentCopy = null;
+            foreach (var segment in collection) {
+                if( currentParent == segment ) {
+                    result.Add(currentParentCopy);
+                    currentParent = null;
+                    currentParentCopy = null;
+                    continue;
+                }
+                if( segment.Parent != null && currentParent == null ) {
+                    currentParent = segment.Parent;
+                    currentParentCopy = segment.Parent.CopySegment();
+                }
+
+                var segmentCopy = segment.CopySegment();
+                segmentCopy.Parent = currentParentCopy;
+                result.Add( segmentCopy );
+            }
+            return result;
+        }
+
         private Run(IEnumerable<ISegment> collection, IComparisonGeneratorsFactory factory, RunMetadata metadata)
         {
-            InternalList = new List<ISegment>();
-            foreach (var x in collection)
-            {
-                InternalList.Add(x.Clone() as ISegment);
-            }
+            InternalList = CloneInternallList( collection );
             AttemptHistory = new List<Attempt>();
             Factory = factory;
             ComparisonGenerators = Factory.Create(this).ToList();

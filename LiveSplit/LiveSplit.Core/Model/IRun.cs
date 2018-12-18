@@ -69,6 +69,19 @@ namespace LiveSplit.Model
             run.Metadata.RunID = null;
         }
 
+        public static void FixParentTree(this IRun run)
+        {
+            ISegment currentParent = null;
+            for( int i = run.Count - 1; i >= 0; i-- ) {
+                if( run[i].Name[0] == '-' ) {
+                    run[i].Parent = currentParent;
+                } else {
+                    currentParent = run[i];
+                    run[i].Parent = null;
+                }
+            }
+        }
+
         public static void FixSplits(this IRun run)
         {
             FixWithMethod(run, TimingMethod.RealTime);
@@ -142,6 +155,8 @@ namespace LiveSplit.Model
 
             foreach (var comparison in run.CustomComparisons)
             {
+                ISegment prevParent = null;
+                var childrenStartTime = TimeSpan.Zero;
                 var previousTime = TimeSpan.Zero;
                 foreach (var curSplit in run)
                 {
@@ -158,7 +173,8 @@ namespace LiveSplit.Model
                         //Fix Best Segment time if the PB segment is faster
                         if (comparison == Run.PersonalBestComparisonName)
                         {
-                            var currentSegment = curSplit.Comparisons[comparison][method] - previousTime;
+                            var comparisonTime = prevParent == curSplit ? childrenStartTime : previousTime;
+                            var currentSegment = curSplit.Comparisons[comparison][method] - comparisonTime;
                             if (curSplit.BestSegmentTime[method] == null || curSplit.BestSegmentTime[method] > currentSegment)
                             {
                                 var newTime = curSplit.BestSegmentTime;
@@ -167,6 +183,10 @@ namespace LiveSplit.Model
                             }
                         }
 
+                        if (prevParent != curSplit.Parent) {
+                            childrenStartTime = previousTime;
+                            prevParent = curSplit.Parent;
+                        }
                         previousTime = curSplit.Comparisons[comparison][method].Value;
                     }
                 }

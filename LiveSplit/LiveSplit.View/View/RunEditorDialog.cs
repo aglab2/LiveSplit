@@ -454,7 +454,7 @@ namespace LiveSplit.View
             if (columnIndex == SEGMENTNAMEINDEX)
             {
                 Run[rowIndex].Name = value.ToString();
-                RaiseRunEdited();
+                RaiseNameEdited();
                 return new ParsingResults(true, value);
             }
 
@@ -637,8 +637,8 @@ namespace LiveSplit.View
 
         private void Fix()
         {
-            Run.FixSplits();
-            UpdateSegmentList();
+            //Run.FixSplits();
+            //UpdateSegmentList();
             runGrid.InvalidateColumn(SPLITTIMEINDEX);
             runGrid.InvalidateColumn(BESTSEGMENTINDEX);
             runGrid.InvalidateColumn(SEGMENTTIMEINDEX);
@@ -697,13 +697,19 @@ namespace LiveSplit.View
 
         private void UpdateSegmentList()
         {
+            ISegment prevParent = null;
+            var childrenStartTime = TimeSpan.Zero;
             var previousTime = TimeSpan.Zero;
             SegmentTimeList.Clear();
-            foreach (var curSeg in Run)
-            {
+            foreach (var curSeg in Run) {
                 var splitTime = curSeg.PersonalBestSplitTime[SelectedMethod];
+                var delta = ( prevParent == curSeg ) ? splitTime - childrenStartTime : splitTime - previousTime;
+                SegmentTimeList.Add(delta);
 
-                SegmentTimeList.Add(splitTime - previousTime);
+                if( prevParent != curSeg.Parent ) {
+                    childrenStartTime = previousTime;
+                    prevParent = curSeg.Parent;
+                }
 
                 if (splitTime != null)
                     previousTime = splitTime.Value;
@@ -712,19 +718,19 @@ namespace LiveSplit.View
 
         private void FixSplitsFromSegments()
         {
-            var previousTime = TimeSpan.Zero;
-            for (var index = 0; index < Run.Count; index++)
-            {
-                var curSegment = Run[index];
-                var curSegTime = SegmentTimeList[index];
+            //var previousTime = TimeSpan.Zero;
+            //for (var index = 0; index < Run.Count; index++)
+            //{
+            //    var curSegment = Run[index];
+            //    var curSegTime = SegmentTimeList[index];
 
-                var time = new Time(curSegment.PersonalBestSplitTime);
-                time[SelectedMethod] = previousTime + curSegTime;
-                curSegment.PersonalBestSplitTime = time;
+            //    var time = new Time(curSegment.PersonalBestSplitTime);
+            //    time[SelectedMethod] = previousTime + curSegTime;
+            //    curSegment.PersonalBestSplitTime = time;
 
-                if (curSegTime != null)
-                    previousTime = curSegment.PersonalBestSplitTime[SelectedMethod].Value;
-            }
+            //    if (curSegTime != null)
+            //        previousTime = curSegment.PersonalBestSplitTime[SelectedMethod].Value;
+            //}
         }
 
         private void btnInsert_Click(object sender, EventArgs e)
@@ -777,7 +783,7 @@ namespace LiveSplit.View
                     if (selectedCell.ColumnIndex == SEGMENTNAMEINDEX)
                     {
                         Run[selectedCell.RowIndex].Name = "";
-                        RaiseRunEdited();
+                        RaiseNameEdited();
                     }
                     else if (selectedCell.ColumnIndex == ICONINDEX)
                     {
@@ -944,8 +950,8 @@ namespace LiveSplit.View
 
         private void FixAfterDeletion(int index)
         {
-            FixWithTimingMethod(index, TimingMethod.RealTime);
-            FixWithTimingMethod(index, TimingMethod.GameTime);
+            //FixWithTimingMethod(index, TimingMethod.RealTime);
+            //FixWithTimingMethod(index, TimingMethod.GameTime);
         }
 
         private void FixWithTimingMethod(int index, TimingMethod method)
@@ -1006,6 +1012,12 @@ namespace LiveSplit.View
                 Run.Metadata.RunID = null;
                 PreviousPersonalBestTime = Run.Last().PersonalBestSplitTime;
             }
+            RaiseRunEdited();
+        }
+
+        private void RaiseNameEdited()
+        {
+            Run.FixParentTree();
             RaiseRunEdited();
         }
 

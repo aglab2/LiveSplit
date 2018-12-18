@@ -630,10 +630,10 @@ namespace LiveSplit.UI.Components
             return state.Run[splitNumber].BestSegmentTime[method];
         }
 
-        private Color? GetSectionColor(LiveSplitState state, TimeSpan? timeDifference, TimeSpan? delta, TimeSpan? segmentTime, TimeSpan? bestSegment)
+        private Color? GetSectionColor(LiveSplitState state, TimeSpan? timeDifference, TimeSpan? delta, TimeSpan? segmentTime, TimeSpan? bestSegment, bool drawBestSegment = true)
         {
             bool isBestTime = bestSegment == null || (segmentTime != null && segmentTime < bestSegment);
-            if (state.LayoutSettings.ShowBestSegments && isBestTime) {
+            if (drawBestSegment && state.LayoutSettings.ShowBestSegments && isBestTime) {
                 return LiveSplitStateHelper.GetBestSegmentColor(state);
             }
 
@@ -743,7 +743,7 @@ namespace LiveSplit.UI.Components
 
                     var bestSegment = getBestTime(state, splitIndex, timingMethod);
 
-                    var color = GetSectionColor(state, null, deltaTime, segmentTime, bestSegment);
+                    var color = GetSectionColor(state, null, deltaTime, segmentTime, bestSegment, false);
                     if (color == null)
                         color = Settings.OverrideHeaderColor ? Settings.HeaderTimesColor : state.LayoutSettings.TextColor;
                     TimeLabel.ForeColor = color.Value;
