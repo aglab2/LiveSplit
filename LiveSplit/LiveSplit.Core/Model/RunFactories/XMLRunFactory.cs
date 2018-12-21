@@ -104,6 +104,7 @@ namespace LiveSplit.Model.RunFactories
                 } else {
                     split = new Segment( splitName );
                 }
+                split.Icon = GetImageFromElement(segmentElement["Icon"]);
 
                 if (version >= new Version(1, 3))
                 {
