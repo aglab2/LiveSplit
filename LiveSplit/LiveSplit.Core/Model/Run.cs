@@ -75,6 +75,9 @@ namespace LiveSplit.Model
         /// </summary>
         public IList<Attempt> AttemptHistory { get; set; }
 
+        public int CurrentDeathCount { get; set; }
+        public int BestDeathCount { get; set; }
+
         public AutoSplitter AutoSplitter { get; set; }
         public XmlElement AutoSplitterSettings { get; set; }
 
@@ -105,6 +108,8 @@ namespace LiveSplit.Model
             ComparisonGenerators = Factory.Create(this).ToList();
             CustomComparisons = new List<string>() { PersonalBestComparisonName };
             Metadata = new RunMetadata(this);
+            CurrentDeathCount = 0;
+            BestDeathCount = -1;
         }
 
         private List<ISegment> CloneInternallList( IEnumerable<ISegment> collection )
@@ -192,7 +197,9 @@ namespace LiveSplit.Model
                 CustomComparisons = new List<string>(CustomComparisons),
                 ComparisonGenerators = new List<IComparisonGenerator>(ComparisonGenerators),
                 AutoSplitter = AutoSplitter != null ? AutoSplitter.Clone() : null,
-                AutoSplitterSettings = AutoSplitterSettings
+                AutoSplitterSettings = AutoSplitterSettings,
+                CurrentDeathCount = CurrentDeathCount,
+                BestDeathCount = BestDeathCount,
             };
             return newRun;
         }

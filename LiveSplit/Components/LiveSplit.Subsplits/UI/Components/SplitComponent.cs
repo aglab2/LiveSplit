@@ -1129,14 +1129,15 @@ namespace LiveSplit.UI.Components
             return 0f;
         }
 
-        protected void RecreateLabels(LiveSplitState state )
+        protected void RecreateLabels(LiveSplitState state)
         {
             if (ColumnsList != null && LabelsList.Count != ColumnsList.Count())
             {
                 LabelsList.Clear();
                 foreach (var column in ColumnsList)
                 {
-                    if( column.Type == ColumnType.DeathCount ) {
+                    if( column.Type == ColumnType.DeathCount )
+                    {
                         LabelsList.Add( new DeathCountLabel
                         {
                             DeathIcon = state.Settings.DeathIcon,

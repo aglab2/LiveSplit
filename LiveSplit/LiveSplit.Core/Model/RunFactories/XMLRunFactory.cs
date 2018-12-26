@@ -79,6 +79,7 @@ namespace LiveSplit.Model.RunFactories
             run.CategoryName = ParseString(parent["CategoryName"]);
             run.Offset = ParseTimeSpan(parent["Offset"]);
             run.AttemptCount = ParseInt(parent["AttemptCount"]);
+            run.BestDeathCount = ParseInt(parent["BestDeathCount"], -1);
 
             ParseAttemptHistory(version, parent, run);
 

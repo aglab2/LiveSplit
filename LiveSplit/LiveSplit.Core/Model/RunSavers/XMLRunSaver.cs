@@ -46,6 +46,7 @@ namespace LiveSplit.Model.RunSavers
 
             CreateSetting(document, parent, "Offset", run.Offset);
             CreateSetting(document, parent, "AttemptCount", run.AttemptCount);
+            CreateSetting(document, parent, "BestDeathCount", run.BestDeathCount);
 
             var runHistory = document.CreateElement("AttemptHistory");
             foreach (var attempt in run.AttemptHistory)

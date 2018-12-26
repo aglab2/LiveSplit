@@ -18,6 +18,9 @@ namespace LiveSplit.Model
         int AttemptCount { get; set; }
         IList<Attempt> AttemptHistory { get; set; }
 
+        int CurrentDeathCount { get; set; }
+        int BestDeathCount{ get; set; }
+
         AutoSplitter AutoSplitter { get; set; }
         XmlElement AutoSplitterSettings { get; set; }
 

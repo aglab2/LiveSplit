@@ -68,6 +68,7 @@ namespace LiveSplit.Model
             if (CurrentState.Run.Count == CurrentState.CurrentSplitIndex) {
                 CurrentState.CurrentPhase = TimerPhase.Ended;
                 CurrentState.AttemptEnded = TimeStamp.CurrentDateTime;
+
                 return false;
             } 
             return true;
@@ -169,13 +170,18 @@ namespace LiveSplit.Model
             if (CurrentState.CurrentPhase != TimerPhase.NotRunning
                 && CurrentState.CurrentSplitIndex > 0)
             {
-                if( CurrentState.CurrentPhase == TimerPhase.Ended ) { 
-                    CurrentState.CurrentPhase = TimerPhase.Running;
-                }
 
-                var undoneSplitDeaths = Math.Max( CurrentState.CurrentSplit.DeathCount, 0 );
-                CurrentState.CurrentSplit.DeathCount = -1;
-                var prevParent = CurrentState.CurrentSplit.Parent;
+                ISegment prevParent;
+                int undoneSplitDeaths;
+                if ( CurrentState.CurrentPhase == TimerPhase.Ended ) { 
+                    CurrentState.CurrentPhase = TimerPhase.Running;
+                    undoneSplitDeaths = 0;
+                    prevParent = null;
+                } else {
+                    undoneSplitDeaths = Math.Max( CurrentState.CurrentSplit.DeathCount, 0 );
+                    CurrentState.CurrentSplit.DeathCount = -1;
+                    prevParent = CurrentState.CurrentSplit.Parent;
+                }
                 DoUndoSplit( undoneSplitDeaths );
 
                 if (prevParent != null && prevParent != CurrentState.CurrentSplit.Parent) {
@@ -198,6 +204,7 @@ namespace LiveSplit.Model
                 if( CurrentState.CurrentSplit.Parent != null ) {
                     CurrentState.CurrentSplit.Parent.DeathCount += addCount;
                 }
+                CurrentState.Run.CurrentDeathCount += addCount;
             }
         }
 
@@ -241,6 +248,7 @@ namespace LiveSplit.Model
             var oldPhase = CurrentState.CurrentPhase;
             CurrentState.CurrentPhase = TimerPhase.NotRunning;
             CurrentState.CurrentSplitIndex = -1;
+            CurrentState.Run.CurrentDeathCount = 0;
 
             //Reset Splits
             foreach (var split in CurrentState.Run)
@@ -324,6 +332,11 @@ namespace LiveSplit.Model
 
         public void UpdateBestSegments()
         {
+            if (CurrentState.CurrentPhase == TimerPhase.Ended && ( CurrentState.Run.BestDeathCount > CurrentState.Run.CurrentDeathCount || CurrentState.Run.BestDeathCount == -1 ))
+            {
+                CurrentState.Run.BestDeathCount = CurrentState.Run.CurrentDeathCount;
+            }
+
             ISegment currentParent = null;
             TimeSpan? parentStartTimeRTA = TimeSpan.Zero;
             TimeSpan? parentStartGameTime = TimeSpan.Zero;

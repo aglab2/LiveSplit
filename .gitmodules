@@ -58,10 +58,6 @@
 	path = LiveSplit/Components/LiveSplit.Text
 	url = https://github.com/LiveSplit/LiveSplit.Text.git
 	branch = master
-[submodule "LiveSplit/Components/LiveSplit.Timer"]
-	path = LiveSplit/Components/LiveSplit.Timer
-	url = https://github.com/LiveSplit/LiveSplit.Timer.git
-	branch = master
 [submodule "LiveSplit/Components/LiveSplit.Title"]
 	path = LiveSplit/Components/LiveSplit.Title
 	url = https://github.com/LiveSplit/LiveSplit.Title.git

@@ -33,7 +33,8 @@ namespace LiveSplit.UI
             DrawMonospaced( g );
             Width += advance;
             if( ActualWidth + advance < Width ) {
-                g.DrawImage(DeathIcon, X + Width - iconWidth, Y + ( Height - iconHeight) / 2, iconWidth, iconHeight);
+                var xOffset = HorizontalAlignment == StringAlignment.Far ? Width - iconWidth : ActualWidth + 6;
+                g.DrawImage(DeathIcon, X + xOffset, Y + ( Height - iconHeight ) / 2, iconWidth, iconHeight);
                 ActualWidth += advance;
             }
         }
