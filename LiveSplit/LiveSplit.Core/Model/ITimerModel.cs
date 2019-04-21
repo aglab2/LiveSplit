@@ -21,6 +21,7 @@ namespace LiveSplit.Model
         event EventHandler OnSwitchComparisonNext;
         
         void Start();
+        void LoadFrozenRun();
         void InitializeGameTime();
         void Split();
         void SkipSplit();

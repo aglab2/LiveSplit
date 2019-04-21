@@ -178,6 +178,12 @@ namespace LiveSplit.Model.RunFactories
             if (!string.IsNullOrEmpty(FilePath))
                 run.FilePath = FilePath;
 
+            var ongoingNode = parent["OngoingRun"];
+            if( ongoingNode != null )
+            {
+                run.FrozenRun = OngoingRun.ParseXml( ongoingNode );
+            }
+
             return run;
         }
     }

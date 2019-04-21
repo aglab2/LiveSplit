@@ -78,6 +78,8 @@ namespace LiveSplit.Model
         public int CurrentDeathCount { get; set; }
         public int BestDeathCount { get; set; }
 
+        public OngoingRun FrozenRun { get; set; }
+
         public AutoSplitter AutoSplitter { get; set; }
         public XmlElement AutoSplitterSettings { get; set; }
 

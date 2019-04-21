@@ -73,6 +73,10 @@ namespace LiveSplit.Model
                 LastEvent = TimeStamp.Now;
             }
         }
+        public void LoadFrozenRun()
+        {
+            InternalModel.LoadFrozenRun();
+        }
 
         public void Split()
         {

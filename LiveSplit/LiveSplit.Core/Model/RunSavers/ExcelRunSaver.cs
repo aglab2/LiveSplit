@@ -8,7 +8,7 @@ namespace LiveSplit.Model.RunSavers
 {
     public class ExcelRunSaver : IRunSaver
     {
-        public void Save(IRun run, Stream stream)
+        public void Save(IRun run, Stream stream, OngoingRun ongoingRun)
         {
             var workbook = new Workbook();
             var splitsRealTimeSheet = workbook.Sheets.AddSheet("Splits (Real Time)");

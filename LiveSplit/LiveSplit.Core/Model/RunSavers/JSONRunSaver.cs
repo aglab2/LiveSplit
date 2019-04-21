@@ -26,7 +26,7 @@ namespace LiveSplit.Model.RunSavers
             return "";
         }
 
-        public void Save(IRun run, Stream stream)
+        public void Save(IRun run, Stream stream, OngoingRun ongoingRun)
         {
             dynamic document = new DynamicJsonObject();
 

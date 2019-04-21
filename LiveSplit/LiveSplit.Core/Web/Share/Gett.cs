@@ -124,7 +124,7 @@ will be deleted after 30 days, though.
         {
             using (var memoryStream = new MemoryStream())
             {
-                RunSaver.Save(run, memoryStream);
+                RunSaver.Save(run, memoryStream, null);
                 memoryStream.Seek(0, SeekOrigin.Begin);
 
                 UploadFile(postUrl, memoryStream);
@@ -168,7 +168,7 @@ will be deleted after 30 days, though.
             var shareData = CreateShare(accessToken, titleBuilder.ToString());
             var shareName = (string)shareData.sharename;
 
-            var fileData = CreateFile(accessToken, shareName, titleBuilder + ".lss");
+            var fileData = CreateFile(accessToken, shareName, titleBuilder + ".lsrs");
             var postUrl = (string)fileData.upload.posturl;
 
             UploadRun(run, postUrl);

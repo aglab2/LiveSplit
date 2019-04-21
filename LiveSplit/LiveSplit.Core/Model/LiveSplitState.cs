@@ -195,6 +195,23 @@ namespace LiveSplit.Model
             }
         }
 
+        public OngoingRun CreateOngoingRun()
+        {
+            if(CurrentPhase != TimerPhase.Running && CurrentPhase != TimerPhase.Paused)
+            {
+                return null;
+            }
+            OngoingRun result = new OngoingRun();
+            for( var i = 0; i < CurrentSplitIndex; i++ )
+            {
+                result.SplitDeaths.Add(Run[i].DeathCount);
+                result.SplitEndTimes.Add(Run[i].SplitTime);
+            }
+            result.SplitDeaths.Add( CurrentSplit.DeathCount );
+            result.SplitEndTimes.Add( CurrentTime );
+            return result;
+        }
+
         public void CallRunManuallyModified() => RunManuallyModified?.Invoke(this, null);
 
         public void CallComparisonRenamed(EventArgs e) => ComparisonRenamed?.Invoke(this, e);

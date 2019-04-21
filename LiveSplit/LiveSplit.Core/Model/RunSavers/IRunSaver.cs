@@ -4,6 +4,6 @@ namespace LiveSplit.Model.RunSavers
 {
     public interface IRunSaver
     {
-        void Save(IRun run, Stream stream);
+        void Save(IRun run, Stream stream, OngoingRun ongoingRun);
     }
 }

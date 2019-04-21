@@ -74,7 +74,7 @@ This includes your whole history of all the runs you ever did.";
                     using (var stream = File.Open(path, FileMode.Create, FileAccess.Write))
                     {
                         var runSaver = new ExcelRunSaver();
-                        runSaver.Save(run, stream);
+                        runSaver.Save(run, stream, null);
                         return true;
                     }
                 }

@@ -20,6 +20,7 @@ namespace LiveSplit.Model
 
         int CurrentDeathCount { get; set; }
         int BestDeathCount{ get; set; }
+        OngoingRun FrozenRun { get; set; }
 
         AutoSplitter AutoSplitter { get; set; }
         XmlElement AutoSplitterSettings { get; set; }
@@ -76,7 +77,7 @@ namespace LiveSplit.Model
         {
             ISegment currentParent = null;
             for( int i = run.Count - 1; i >= 0; i-- ) {
-                if( run[i].Name[0] == '-' ) {
+                if( run[i].Name.Length > 0 && run[i].Name[0] == '-' ) {
                     run[i].Parent = currentParent;
                 } else {
                     currentParent = run[i];

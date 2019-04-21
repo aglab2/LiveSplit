@@ -5,7 +5,7 @@ namespace LiveSplit.Model.RunSavers
 {
     public class SerializeRunSaver : IRunSaver
     {
-        public void Save(IRun run, Stream stream)
+        public void Save(IRun run, Stream stream, OngoingRun ongoingRun)
         {
             var obj = (IRun)run.Clone();
             foreach (var segment in obj)

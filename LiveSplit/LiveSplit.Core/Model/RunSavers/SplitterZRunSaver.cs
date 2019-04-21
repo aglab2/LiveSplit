@@ -10,7 +10,7 @@ namespace LiveSplit.Model.RunSavers
             return text.Replace(@",", @"‡");
         }
 
-        public void Save(IRun run, Stream stream)
+        public void Save(IRun run, Stream stream, OngoingRun ongoingRun)
         {
             var regularTimeFormatter = new RegularTimeFormatter(TimeAccuracy.Hundredths);
             var shortTimeFormatter = new ShortTimeFormatter();

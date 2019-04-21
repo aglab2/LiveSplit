@@ -313,7 +313,7 @@ namespace LiveSplit.Web.Share
                     writer.WriteLine();
                     writer.Flush();
 
-                    new XMLRunSaver().Save(run, stream);
+                    new XMLRunSaver().Save(run, stream, null);
 
                     writer.WriteLine();
                     writer.WriteLine("--AaB03x--");

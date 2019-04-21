@@ -7,7 +7,7 @@ namespace LiveSplit.Model.RunSavers
 {
     public class XMLRunSaver : IRunSaver
     {
-        public void Save(IRun run, Stream stream)
+        public void Save(IRun run, Stream stream, OngoingRun ongoingRun)
         {
             var document = new XmlDocument();
 
@@ -100,6 +100,11 @@ namespace LiveSplit.Model.RunSavers
             if (run.IsAutoSplitterActive())
                 autoSplitterSettings.InnerXml = run.AutoSplitter.Component.GetSettings(document).InnerXml;
             parent.AppendChild(autoSplitterSettings);
+
+            if( ongoingRun != null )
+            {
+                parent.AppendChild( ongoingRun.ToXml( document ) );
+            }
 
             document.Save(stream);
         }

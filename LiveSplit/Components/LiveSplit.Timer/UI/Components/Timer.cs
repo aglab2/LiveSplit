@@ -215,7 +215,7 @@ namespace LiveSplit.UI.Components
             DeathsLabel.X = 8;
             BigTextLabel.Y = shift;
             SmallTextLabel.Y = shift + ascent - smallAscent;
-            DeathsLabel.Y = shift + ascent - smallAscent - 4;
+            DeathsLabel.Y = shift + ascent - smallAscent - 1;
             BigTextLabel.Height = 150f;
             SmallTextLabel.Height = 150f;
             DeathsLabel.Height = 37f;

@@ -59,6 +59,69 @@ namespace LiveSplit.Model
             }
         }
 
+        public void LoadFrozenRun()
+        {
+            var ongoingRun = CurrentState.Run.FrozenRun;
+            if (CurrentState.CurrentPhase != TimerPhase.NotRunning || ongoingRun == null)
+            {
+                return;
+            }
+
+            var count = ongoingRun.SplitDeaths.Count;
+            if( count == 0 )
+            {
+                return;
+            }
+            Time lastSplitTime = Time.Zero;
+            for (var i = 0; i < count; i++)
+            {
+                CurrentState.Run[i].DeathCount = ongoingRun.SplitDeaths[i];
+                lastSplitTime = ongoingRun.SplitEndTimes[i];
+                CurrentState.Run[i].SplitTime = lastSplitTime;
+            }
+
+            CurrentState.Run[count - 1].SplitTime = Time.Zero;
+            var endTime = lastSplitTime.RealTime.Value;
+            var offsetEndTime = endTime - CurrentState.Run.Offset;
+            var currentAtomicTime = TimeStamp.CurrentDateTime;
+            var beginDateTime = currentAtomicTime.Time - offsetEndTime;
+            var beginTimeStamp = TimeStamp.Now - offsetEndTime;
+
+            CurrentState.CurrentSplitIndex = count - 1;
+            CurrentState.CurrentPhase = TimerPhase.Running;
+            CurrentState.AttemptStarted = new AtomicDateTime( beginDateTime, currentAtomicTime.SyncedWithAtomicClock );
+            CurrentState.StartTime = beginTimeStamp;
+            CurrentState.AdjustedStartTime = CurrentState.StartTimeWithOffset = beginTimeStamp - CurrentState.Run.Offset;
+            CurrentState.TimePausedAt = CurrentState.Run.Offset;
+            CurrentState.IsGameTimeInitialized = false;
+            CurrentState.Run.HasChanged = true;
+            RecountLastParentDeaths();
+
+            OnStart?.Invoke(this, null);
+            Pause();
+        }
+
+        private void RecountLastParentDeaths()
+        {
+            var parent = CurrentState.CurrentSplit.Parent;
+            if ( parent != null )
+            {
+                parent.DeathCount = CurrentState.CurrentSplit.DeathCount;
+                for( var i = CurrentState.CurrentSplitIndex - 1; i >= 0; i-- )
+                {
+                    var split = CurrentState.Run[i];
+                    if( IsSameParent( split, CurrentState.CurrentSplit ) )
+                    {
+                        parent.DeathCount += split.DeathCount;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
         public void InitializeGameTime() => CurrentState.IsGameTimeInitialized = true;
 
         private bool DoAdvanceSplit()
@@ -91,7 +154,7 @@ namespace LiveSplit.Model
                     }
                     if( CurrentState.Run.Count != CurrentState.CurrentSplitIndex ) {
                         CurrentState.CurrentSplit.DeathCount = 0;
-                        if( CurrentState.CurrentSplit.Parent != null && !object.ReferenceEquals( CurrentState.CurrentSplit.Parent, prevSplit.Parent ) ) {
+                        if( CurrentState.CurrentSplit.Parent != null && !IsSameParent(CurrentState.CurrentSplit, prevSplit) ) {
                             CurrentState.CurrentSplit.Parent.DeathCount = 0;
                         }
                     }
@@ -100,6 +163,11 @@ namespace LiveSplit.Model
                 CurrentState.Run.HasChanged = true;
                 OnSplit?.Invoke(this, null);
             }
+        }
+
+        private bool IsSameParent( ISegment left, ISegment right )
+        {
+            return object.ReferenceEquals( left.Parent, right.Parent );
         }
 
         public void DoSkipSplit()

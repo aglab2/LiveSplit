@@ -271,6 +271,10 @@ namespace LiveSplit.Options
                                            IntPtr dwItem1,
                                            IntPtr dwItem2);
 
+        private static string splitExt = ".lsrs";
+        private static string layoutExt = ".lsl";
+        private static string splitsFileKey = "LiveSplitRed.SplitsFile";
+        private static string layoutFileKey = "LiveSplit.LayoutFile";
         public static void RegisterFileFormats()
         {
             var root = Registry.ClassesRoot;
@@ -278,7 +282,7 @@ namespace LiveSplit.Options
             {
                 try
                 {
-                    root.DeleteSubKeyTree(".lss");
+                    root.DeleteSubKeyTree(splitExt);
                 }
                 catch (Exception e)
                 {
@@ -286,7 +290,7 @@ namespace LiveSplit.Options
                 }
                 try
                 {
-                    root.DeleteSubKeyTree("LiveSplit.SplitsFile");
+                    root.DeleteSubKeyTree(splitsFileKey);
                 }
                 catch (Exception e)
                 {
@@ -294,7 +298,7 @@ namespace LiveSplit.Options
                 }
                 try
                 {
-                    root.DeleteSubKeyTree(".lsl");
+                    root.DeleteSubKeyTree(layoutExt);
                 }
                 catch (Exception e)
                 {
@@ -302,7 +306,9 @@ namespace LiveSplit.Options
                 }
                 try
                 {
-                    root.DeleteSubKeyTree("LiveSplit.LayoutFile");
+                    if( !CheckLSLApplicationKey() ) { 
+                        root.DeleteSubKeyTree(layoutFileKey);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -310,25 +316,25 @@ namespace LiveSplit.Options
                 }
             }
             
-            var lssExtensionKey = root.OpenSubKey(".lss");
+            var lssExtensionKey = root.OpenSubKey(splitExt);
             if (lssExtensionKey == null)
             {
                 AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
                 CreateLSSExtensionKey();
             }
-            var lssApplicationKey = root.OpenSubKey("LiveSplit.SplitsFile");
+            var lssApplicationKey = root.OpenSubKey(splitsFileKey);
             if (lssApplicationKey == null)
             {
                 AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
                 CreateLSSApplicationKey();
             }
-            var lslExtensionKey = root.OpenSubKey(".lsl");
+            var lslExtensionKey = root.OpenSubKey(layoutExt);
             if (lslExtensionKey == null)
             {
                 AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
                 CreateLSLExtensionKey();
             }
-            var lslApplicationKey = root.OpenSubKey("LiveSplit.LayoutFile");
+            var lslApplicationKey = root.OpenSubKey(layoutFileKey);
             if (lslApplicationKey == null)
             {
                 AppDomain.CurrentDomain.SetPrincipalPolicy(PrincipalPolicy.WindowsPrincipal);
@@ -339,21 +345,21 @@ namespace LiveSplit.Options
         private static void CreateLSSExtensionKey()
         {
             var root = Registry.ClassesRoot;
-            var lssExtensionKey = root.CreateSubKey(".lss");
-            lssExtensionKey.SetValue("", "LiveSplit.SplitsFile");
+            var lssExtensionKey = root.CreateSubKey(splitExt);
+            lssExtensionKey.SetValue("", splitsFileKey);
         }
 
         private static bool CheckLSSExtensionKey()
         {
             var root = Registry.ClassesRoot;
-            var lssExtensionKey = root.OpenSubKey(".lss");
-            return lssExtensionKey.GetValue("").ToString() == "LiveSplit.SplitsFile";
+            var lssExtensionKey = root.OpenSubKey(splitExt);
+            return lssExtensionKey.GetValue("").ToString() == splitsFileKey;
         }
 
         private static void CreateLSSApplicationKey()
         {
             var root = Registry.ClassesRoot;
-            var lssApplicationKey = root.CreateSubKey("LiveSplit.SplitsFile");
+            var lssApplicationKey = root.CreateSubKey(splitsFileKey);
             var shell = lssApplicationKey.CreateSubKey("shell");
             var open = shell.CreateSubKey("open");
             var command = open.CreateSubKey("command");
@@ -367,7 +373,7 @@ namespace LiveSplit.Options
         private static bool CheckLSSApplicationKey()
         {
             var root = Registry.ClassesRoot;
-            var lssApplicationKey = root.OpenSubKey("LiveSplit.SplitsFile");
+            var lssApplicationKey = root.OpenSubKey(splitsFileKey);
             var shell = lssApplicationKey.OpenSubKey("shell");
             var open = shell.OpenSubKey("open");
             var command = open.OpenSubKey("command");
@@ -382,21 +388,21 @@ namespace LiveSplit.Options
         private static void CreateLSLExtensionKey()
         {
             var root = Registry.ClassesRoot;
-            var lslExtensionKey = root.CreateSubKey(".lsl");
-            lslExtensionKey.SetValue("", "LiveSplit.LayoutFile");
+            var lslExtensionKey = root.CreateSubKey(layoutExt);
+            lslExtensionKey.SetValue("", layoutFileKey);
         }
 
         private static bool CheckLSLExtensionKey()
         {
             var root = Registry.ClassesRoot;
-            var lslExtensionKey = root.OpenSubKey(".lsl");
-            return lslExtensionKey.GetValue("").ToString() == "LiveSplit.LayoutFile";
+            var lslExtensionKey = root.OpenSubKey(layoutExt);
+            return lslExtensionKey.GetValue("").ToString() == layoutFileKey;
         }
 
         private static void CreateLSLApplicationKey()
         {
             var root = Registry.ClassesRoot;
-            var lslApplicationKey = root.CreateSubKey("LiveSplit.LayoutFile");
+            var lslApplicationKey = root.CreateSubKey(layoutFileKey);
             var shell = lslApplicationKey.CreateSubKey("shell");
             var open = shell.CreateSubKey("open");
             var command = open.CreateSubKey("command");
@@ -409,16 +415,20 @@ namespace LiveSplit.Options
         private static bool CheckLSLApplicationKey()
         {
             var root = Registry.ClassesRoot;
-            var lslApplicationKey = root.OpenSubKey("LiveSplit.LayoutFile");
+            var lslApplicationKey = root.OpenSubKey(layoutFileKey);
             var shell = lslApplicationKey.OpenSubKey("shell");
             var open = shell.OpenSubKey("open");
             var command = open.OpenSubKey("command");
-            if (command.GetValue("").ToString() != $"\"{Application.ExecutablePath.Replace("LiveSplit.Register.exe", "LiveSplit.exe")}\" -l \"{"%1"}\"")
+
+            var commandStr = command.GetValue("").ToString();
+            commandStr = commandStr.TrimStart( '\"' );
+            var pathEnd = commandStr.IndexOf( '\"' );
+            if( pathEnd == -1 )
+            {
                 return false;
-            var iconKey = lslApplicationKey.OpenSubKey("DefaultIcon");
-            if (iconKey.GetValue("").ToString() != $"{Path.GetDirectoryName(Application.ExecutablePath)}\\Resources\\{"LayoutFile.ico"}")
-                return false;
-            return true;
+            }
+            var path = commandStr.Substring( 0, pathEnd );
+            return File.Exists( path );
         }
 
         public static bool IsAlreadyRegistered()
@@ -426,22 +436,22 @@ namespace LiveSplit.Options
             try
             {
                 var root = Registry.ClassesRoot;
-                var lssExtensionKey = root.OpenSubKey(".lss");
+                var lssExtensionKey = root.OpenSubKey(splitExt);
                 if (lssExtensionKey == null || !CheckLSSExtensionKey())
                 {
                     return false;
                 }
-                var lssApplicationKey = root.OpenSubKey("LiveSplit.SplitsFile");
+                var lssApplicationKey = root.OpenSubKey(splitsFileKey);
                 if (lssApplicationKey == null || !CheckLSSApplicationKey())
                 {
                     return false;
                 }
-                var lslExtensionKey = root.OpenSubKey(".lsl");
+                var lslExtensionKey = root.OpenSubKey(layoutExt);
                 if (lslExtensionKey == null || !CheckLSLExtensionKey())
                 {
                     return false;
                 }
-                var lslApplicationKey = root.OpenSubKey("LiveSplit.LayoutFile");
+                var lslApplicationKey = root.OpenSubKey(layoutFileKey);
                 if (lslApplicationKey == null || !CheckLSLApplicationKey())
                 {
                     return false;

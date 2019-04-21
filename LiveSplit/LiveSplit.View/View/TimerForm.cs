@@ -1601,6 +1601,7 @@ namespace LiveSplit.View
                 var run = LoadRunFromFile(filePath, previousTimingMethod);
                 SetRun(run);
                 CurrentState.CallRunManuallyModified();
+                Model.LoadFrozenRun();
             }
             catch (Exception e)
             {
@@ -1639,7 +1640,7 @@ namespace LiveSplit.View
             using (var splitDialog = new SaveFileDialog())
             {
                 splitDialog.FileName = CurrentState.Run.GetExtendedFileName();
-                splitDialog.Filter = "LiveSplit Splits (*.lss)|*.lss|All Files (*.*)|*.*";
+                splitDialog.Filter = "LiveSplit Splits (*.lsrs)|*.lsrs|All Files (*.*)|*.*";
                 IsInDialogMode = true;
                 try
                 {
@@ -1660,8 +1661,8 @@ namespace LiveSplit.View
         private void SaveSplits(bool promptPBMessage)
         {
             var savePath = CurrentState.Run.FilePath;
-
-            if (savePath == null)
+            
+            if (savePath == null || Path.GetExtension(savePath) == ".lss" )
             {
                 SaveSplitsAs(promptPBMessage);
                 return;
@@ -1673,12 +1674,11 @@ namespace LiveSplit.View
             var modelCopy = new TimerModel();
             modelCopy.CurrentState = stateCopy;
             var result = DialogResult.No;
+            OngoingRun ongoingRun = CurrentState.CreateOngoingRun();
 
             if (promptPBMessage && ((CurrentState.CurrentPhase == TimerPhase.Ended
                 && CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod] != null
-                && CurrentState.Run.Last().SplitTime[CurrentState.CurrentTimingMethod] >= CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod])
-                || CurrentState.CurrentPhase == TimerPhase.Running
-                || CurrentState.CurrentPhase == TimerPhase.Paused))
+                && CurrentState.Run.Last().SplitTime[CurrentState.CurrentTimingMethod] >= CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod])))
             {
                 DontRedraw = true;
                 result = MessageBox.Show(this, "This run did not beat your current splits. Would you like to save this run as a Personal Best?", "Save as Personal Best?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
@@ -1708,7 +1708,7 @@ namespace LiveSplit.View
 
                 using (var memoryStream = new MemoryStream())
                 {
-                    RunSaver.Save(stateCopy.Run, memoryStream);
+                    RunSaver.Save(stateCopy.Run, memoryStream, ongoingRun);
 
                     using (var stream = File.Open(savePath, FileMode.Create, FileAccess.Write))
                     {
