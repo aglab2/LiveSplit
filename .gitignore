@@ -245,8 +245,5 @@ $RECYCLE.BIN/
 LiveSplit/LiveSplit.Core/Updates/GitInfo/branch.txt
 LiveSplit/LiveSplit.Core/Updates/GitInfo/version.txt
 LiveSplit/LiveSplit.Core/Updates/GitInfo/revision.txt
-/LiveSplit/.vs/LiveSplit/v15/Server/sqlite3/*.ide-wal
-/LiveSplit/.vs/LiveSplit/v15/Server/sqlite3/db.lock
-/LiveSplit/.vs/LiveSplit/v15/Server/sqlite3/storage.ide
-/LiveSplit/.vs/LiveSplit/v15/Server/sqlite3/storage.ide-shm
+/LiveSplit/.vs/*
 /TestSplits
