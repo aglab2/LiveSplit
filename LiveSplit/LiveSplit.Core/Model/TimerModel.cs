@@ -97,6 +97,16 @@ namespace LiveSplit.Model
             CurrentState.Run.HasChanged = true;
             RecountLastParentDeaths();
 
+            var totalDeaths = 0;
+            foreach( var split in CurrentState.Run )
+            {
+                if( split.Parent == null && split.DeathCount > 0 )
+                {
+                    totalDeaths += split.DeathCount;
+                }
+            }
+            CurrentState.Run.CurrentDeathCount = totalDeaths;
+
             OnStart?.Invoke(this, null);
             Pause();
         }

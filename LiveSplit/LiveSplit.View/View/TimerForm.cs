@@ -281,6 +281,8 @@ namespace LiveSplit.View
 
             Server = new CommandServer(CurrentState);
             Server.Start();
+
+            Model.LoadFrozenRun();
         }
 
         void SetWindowTitle()
