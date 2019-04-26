@@ -34,6 +34,7 @@ namespace LiveSplit.UI.Components
 
         public TimerSettings Settings { get; set; }
         public float ActualWidth { get; set; }
+        public bool DeathsLabelVisible { get; set; }
 
         public string ComponentName => "Timer";
 
@@ -97,6 +98,7 @@ namespace LiveSplit.UI.Components
             Cache = new GraphicsCache();
             TimerColor = Color.Transparent;
             DeathCountColor = Color.Transparent;
+            DeathsLabelVisible = true;
         }
 
         public static void DrawBackground(Graphics g, Color timerColor, Color settingsColor1, Color settingsColor2, 
@@ -259,7 +261,9 @@ namespace LiveSplit.UI.Components
             BigTextLabel.Draw(g);
             SmallTextLabel.Draw(g);
             g.TranslateTransform( -g.Transform.OffsetX / g.Transform.Elements[0], 0 );
-            DeathsLabel.Draw(g);
+            if( DeathsLabelVisible ) { 
+                DeathsLabel.Draw(g);
+            }
             g.Transform = oldMatrix;
         }
 

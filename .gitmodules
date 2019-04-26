@@ -6,10 +6,6 @@
 	path = LiveSplit/Components/LiveSplit.Delta
 	url = https://github.com/LiveSplit/LiveSplit.Delta.git
 	branch = master
-[submodule "LiveSplit/Components/LiveSplit.DetailedTimer"]
-	path = LiveSplit/Components/LiveSplit.DetailedTimer
-	url = https://github.com/LiveSplit/LiveSplit.DetailedTimer.git
-	branch = master
 [submodule "LiveSplit/Components/LiveSplit.Graph"]
 	path = LiveSplit/Components/LiveSplit.Graph
 	url = https://github.com/LiveSplit/LiveSplit.Graph.git
