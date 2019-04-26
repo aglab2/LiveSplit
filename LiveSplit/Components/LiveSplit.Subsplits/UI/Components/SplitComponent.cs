@@ -39,6 +39,7 @@ namespace LiveSplit.UI.Components
         protected bool IsActive { get; set; }
         protected bool IsHighlight { get; set; }
         protected bool IsSubsplit { get; set; }
+        protected bool IsExpanded { get; set; }
 
         protected TimeAccuracy CurrentAccuracy { get; set; }
         protected TimeAccuracy CurrentDeltaAccuracy { get; set; }
@@ -64,7 +65,8 @@ namespace LiveSplit.UI.Components
         public float PaddingRight => 0f;
 
         public IEnumerable<ColumnData> ColumnsList { get; set; }
-        public IList<SimpleLabel> LabelsList { get; set; }
+        public IList<SimpleLabel> LabelsList { get; private set; }
+        public IList<ColumnType> LabelTypesList { get; private set; }
 
         private Regex SubsplitRegex = new Regex(@"^{(.+)}\s*(.+)$", RegexOptions.Compiled);
 
@@ -117,6 +119,7 @@ namespace LiveSplit.UI.Components
 
             Cache = new GraphicsCache();
             LabelsList = new List<SimpleLabel>();
+            LabelTypesList = new List<ColumnType>();
         }
 
         private void DrawGeneral(Graphics g, LiveSplitState state, float width, float height, LayoutMode mode, Region clipRegion)
@@ -709,8 +712,10 @@ namespace LiveSplit.UI.Components
                             || state.CurrentPhase == TimerPhase.Paused) &&
                             ((!Settings.HideSubsplits && state.CurrentSplit == Split) ||
                             (SplitsSettings.SectionSplit != null && SplitsSettings.SectionSplit == Split));
-                IsHighlight = (SplitsSettings.HilightSplit == Split);
+                var hilightSplit = SplitsSettings.HilightSplit;
+                IsHighlight = (hilightSplit == Split);
                 IsSubsplit = Split.Name.StartsWith("-") && Split != state.Run.Last();
+                IsExpanded = object.ReferenceEquals(hilightSplit?.Parent, Split );
 
                 if (IsSubsplit)
                     NameLabel.Text = Split.Name.Substring(1);
@@ -1131,9 +1136,10 @@ namespace LiveSplit.UI.Components
 
         protected void RecreateLabels(LiveSplitState state)
         {
-            if (ColumnsList != null && LabelsList.Count != ColumnsList.Count())
+            if (FindLabelChanges())
             {
                 LabelsList.Clear();
+                LabelTypesList.Clear();
                 foreach (var column in ColumnsList)
                 {
                     if( column.Type == ColumnType.DeathCount )
@@ -1143,14 +1149,38 @@ namespace LiveSplit.UI.Components
                             DeathIcon = state.Settings.DeathIcon,
                             HorizontalAlignment = StringAlignment.Far
                         });
+                        LabelTypesList.Add( ColumnType.DeathCount );
                     } else {
                         LabelsList.Add(new SimpleLabel
                         {
                             HorizontalAlignment = StringAlignment.Far
                         });
+                        LabelTypesList.Add( column.Type );
                     }
                 }
             }
+        }
+
+        protected bool FindLabelChanges()
+        {
+            if (ColumnsList == null)
+            {
+                return false;
+            }
+            if (LabelsList.Count != ColumnsList.Count())
+            {
+                return true;
+            }
+            var labelPos = 0;
+            foreach (var column in ColumnsList)
+            {
+                if( LabelTypesList[labelPos] == column.Type)
+                {
+                    return true;
+                }
+                labelPos++;
+            }
+            return false;
         }
 
         public void Update(IInvalidator invalidator, LiveSplitState state, float width, float height, LayoutMode mode)
@@ -1174,6 +1204,7 @@ namespace LiveSplit.UI.Components
                 Cache["TimeLabel"] = TimeLabel.Text;
                 Cache["IsActive"] = IsActive;
                 Cache["IsHighlight"] = IsHighlight;
+                Cache["IsExpanded"] = IsExpanded;
                 Cache["NameColor"] = NameLabel.ForeColor.ToArgb();
                 Cache["TimeColor"] = TimeLabel.ForeColor.ToArgb();
                 Cache["DeltaColor"] = DeltaLabel.ForeColor.ToArgb();
