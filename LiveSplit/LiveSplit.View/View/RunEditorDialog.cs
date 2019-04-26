@@ -638,7 +638,7 @@ namespace LiveSplit.View
         private void Fix()
         {
             //Run.FixSplits();
-            //UpdateSegmentList();
+            UpdateSegmentList();
             runGrid.InvalidateColumn(SPLITTIMEINDEX);
             runGrid.InvalidateColumn(BESTSEGMENTINDEX);
             runGrid.InvalidateColumn(SEGMENTTIMEINDEX);
