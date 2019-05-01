@@ -156,14 +156,6 @@ namespace LiveSplit.UI.Components
             if (OldShadowsColor != state.LayoutSettings.ShadowsColor)
                 ShadowImages.Clear();
 
-            foreach (var split in state.Run)
-            {
-                if (split.Icon != null && (!ShadowImages.ContainsKey(split.Icon) || OldShadowsColor != state.LayoutSettings.ShadowsColor))
-                {
-                    ShadowImages.Add(split.Icon, IconShadow.Generate(split.Icon, state.LayoutSettings.ShadowsColor));
-                }
-            }
-
             var iconsNotBlank = state.Run.Where(x => x.Icon != null).Count() > 0;
 
             foreach (var split in SplitComponents)
@@ -177,9 +169,19 @@ namespace LiveSplit.UI.Components
                     split.DisplayIcon = Settings.DisplayIcons && !hideIconSectionSplit && iconsNotBlank && shouldIndent;
 
                 if (split.Split != null && split.Split.Icon != null)
-                    split.ShadowImage = ShadowImages[split.Split.Icon];
+                { 
+                    Image shadowIcon = null;
+                    if ( !ShadowImages.TryGetValue( split.Split.Icon, out shadowIcon ) )
+                    { 
+                        shadowIcon = IconShadow.Generate( split.Split.Icon, state.LayoutSettings.ShadowsColor );
+                        ShadowImages.Add( split.Split.Icon, shadowIcon );
+                    }
+                    split.ShadowImage = shadowIcon;
+                }
                 else
+                { 
                     split.ShadowImage = null;
+                }
             }
             OldShadowsColor = state.LayoutSettings.ShadowsColor;
 
