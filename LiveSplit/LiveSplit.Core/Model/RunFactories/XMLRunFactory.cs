@@ -19,14 +19,16 @@ namespace LiveSplit.Model.RunFactories
             FilePath = filePath;
         }
 
-        private static void ParseAttemptHistory(Version version, XmlElement parent, IRun run)
+        private static void ParseAttemptHistory(Version version, XmlElement parent, IRun run, out int maxAttemptIndex )
         {
+            maxAttemptIndex = 1;
             if (version >= new Version(1, 5, 0))
             {
                 var attemptHistory = parent["AttemptHistory"];
                 foreach (var attemptNode in attemptHistory.GetElementsByTagName("Attempt"))
                 {
                     var attempt = Attempt.ParseXml(attemptNode as XmlElement);
+                    maxAttemptIndex = Math.Max(maxAttemptIndex, attempt.Index);
                     run.AttemptHistory.Add(attempt);
                 }
             }
@@ -36,6 +38,7 @@ namespace LiveSplit.Model.RunFactories
                 foreach (var runHistoryNode in runHistory.GetElementsByTagName("Time"))
                 {
                     var indexedTime = ParseXml(runHistoryNode as XmlElement);
+                    maxAttemptIndex = Math.Max( maxAttemptIndex, indexedTime.Index );
                     var attempt = new Attempt(indexedTime.Index, indexedTime.Time, null, null, null);
                     run.AttemptHistory.Add(attempt);
                 }
@@ -46,6 +49,7 @@ namespace LiveSplit.Model.RunFactories
                 foreach (var runHistoryNode in runHistory.GetElementsByTagName("Time"))
                 {
                     var indexedTime = ParseXmlOld(runHistoryNode as XmlElement);
+                    maxAttemptIndex = Math.Max(maxAttemptIndex, indexedTime.Index);
                     var attempt = new Attempt(indexedTime.Index, indexedTime.Time, null, null, null);
                     run.AttemptHistory.Add(attempt);
                 }
@@ -81,7 +85,8 @@ namespace LiveSplit.Model.RunFactories
             run.AttemptCount = ParseInt(parent["AttemptCount"]);
             run.BestDeathCount = ParseInt(parent["BestDeathCount"], -1);
 
-            ParseAttemptHistory(version, parent, run);
+            int maxAttemptIndex;
+            ParseAttemptHistory(version, parent, run, out maxAttemptIndex);
 
             var segmentsNode = parent["Segments"];
 
@@ -151,13 +156,14 @@ namespace LiveSplit.Model.RunFactories
                 {
                     var node = historyNode as XmlElement;
                     IIndexedTime indexedTime;
-                    if (version >= new Version(1, 4, 1))
+                    if (version >= new Version(1, 4, 1)) { 
                         indexedTime = ParseXml(node);
-                    else
+                    } else {
                         indexedTime = ParseXmlOld(node);
-
-                    if (!split.SegmentHistory.ContainsKey(indexedTime.Index))
+                    }
+                    if( indexedTime.Index <= maxAttemptIndex && !split.SegmentHistory.ContainsKey(indexedTime.Index)) { 
                         split.SegmentHistory.Add(indexedTime.Index, indexedTime.Time);
+                    }
                 }
 
                 run.Add(split);
