@@ -1678,9 +1678,10 @@ namespace LiveSplit.View
             var result = DialogResult.No;
             OngoingRun ongoingRun = CurrentState.CreateOngoingRun();
 
-            if (promptPBMessage && ((CurrentState.CurrentPhase == TimerPhase.Ended
+            if (promptPBMessage 
+                && (CurrentState.CurrentPhase == TimerPhase.Ended
                 && CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod] != null
-                && CurrentState.Run.Last().SplitTime[CurrentState.CurrentTimingMethod] >= CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod])))
+                && CurrentState.Run.Last().SplitTime[CurrentState.CurrentTimingMethod] >= CurrentState.Run.Last().PersonalBestSplitTime[CurrentState.CurrentTimingMethod]))
             {
                 DontRedraw = true;
                 result = MessageBox.Show(this, "This run did not beat your current splits. Would you like to save this run as a Personal Best?", "Save as Personal Best?", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
@@ -1698,10 +1699,11 @@ namespace LiveSplit.View
                     return;
             }
 
-            if (result == DialogResult.Yes)
+            if (result == DialogResult.Yes) { 
                 modelCopy.Reset(false);
-            else
+            } else if ( CurrentState.CurrentPhase != TimerPhase.Paused && CurrentState.CurrentPhase != TimerPhase.Running ) { 
                 modelCopy.Reset();
+            }
 
             try
             {

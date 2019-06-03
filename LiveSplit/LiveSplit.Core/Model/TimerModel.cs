@@ -94,7 +94,6 @@ namespace LiveSplit.Model
             CurrentState.AdjustedStartTime = CurrentState.StartTimeWithOffset = beginTimeStamp - CurrentState.Run.Offset;
             CurrentState.TimePausedAt = CurrentState.Run.Offset;
             CurrentState.IsGameTimeInitialized = false;
-            CurrentState.Run.HasChanged = true;
             RecountLastParentDeaths();
 
             var totalDeaths = 0;
@@ -350,6 +349,7 @@ namespace LiveSplit.Model
             {
                 CurrentState.AdjustedStartTime = TimeStamp.Now - CurrentState.TimePausedAt;
                 CurrentState.CurrentPhase = TimerPhase.Running;
+                CurrentState.Run.HasChanged = true;
                 OnResume?.Invoke(this, null);
             }
             else if (CurrentState.CurrentPhase == TimerPhase.NotRunning)
