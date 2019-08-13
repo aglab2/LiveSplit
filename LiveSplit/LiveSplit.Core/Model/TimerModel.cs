@@ -80,7 +80,7 @@ namespace LiveSplit.Model
                 CurrentState.Run[i].SplitTime = lastSplitTime;
             }
 
-            CurrentState.Run[count - 1].SplitTime = Time.Zero;
+            CurrentState.Run[count - 1].SplitTime = default( Time );
             var endTime = lastSplitTime.RealTime.Value;
             var offsetEndTime = endTime - CurrentState.Run.Offset;
             var currentAtomicTime = TimeStamp.CurrentDateTime;
