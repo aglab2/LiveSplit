@@ -29,7 +29,9 @@ namespace LiveSplit.View
         private const int SPLITTIMEINDEX = 2;
         private const int SEGMENTTIMEINDEX = 3;
         private const int BESTSEGMENTINDEX = 4;
-        private const int CUSTOMCOMPARISONSINDEX = 5;
+        private const int DEATHCOUNTINDEX = 5;
+        private const int BESTDEATHSINDEX = 6;
+        private const int CUSTOMCOMPARISONSINDEX = 7;
 
         public IRun Run { get; set; }
         public LiveSplitState CurrentState { get; set; }
@@ -194,6 +196,22 @@ namespace LiveSplit.View
             column = new DataGridViewTextBoxColumn();
             column.Name = "Best Segment";
             column.Width = 100;
+            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            runGrid.Columns.Add(column);
+
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "Deaths";
+            column.Width = 75;
+            column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
+            column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            column.SortMode = DataGridViewColumnSortMode.NotSortable;
+            runGrid.Columns.Add(column);
+
+            column = new DataGridViewTextBoxColumn();
+            column.Name = "Best Deaths";
+            column.Width = 75;
             column.AutoSizeMode = DataGridViewAutoSizeColumnMode.None;
             column.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             column.SortMode = DataGridViewColumnSortMode.NotSortable;
@@ -411,6 +429,13 @@ namespace LiveSplit.View
                     e.Handled = true;
                 }
             }
+            if( runGrid.CurrentCell.ColumnIndex == DEATHCOUNTINDEX || runGrid.CurrentCell.ColumnIndex == BESTDEATHSINDEX )
+            {
+                if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+                {
+                    e.Handled = true;
+                }
+            }
         }
 
         void runGrid_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -433,6 +458,26 @@ namespace LiveSplit.View
                 {
                     e.Cancel = true;
                     runGrid.Rows[e.RowIndex].ErrorText = "Invalid Time";
+                }
+            }
+            if( e.ColumnIndex == DEATHCOUNTINDEX || e.ColumnIndex == BESTDEATHSINDEX )
+            {
+                var str = e.FormattedValue.ToString();
+                if (string.IsNullOrWhiteSpace(str))
+                {
+                    return;
+                }
+                if (str[0] == '-' && str.Length == 2 && str[1] == '1' )
+                {
+                    return;
+                } 
+                foreach ( var ch in str )
+                {
+                    if (!char.IsDigit(ch))
+                    {
+                        e.Cancel = true;
+                        runGrid.Rows[e.RowIndex].ErrorText = "Invalid Count";
+                    }
                 }
             }
         }
@@ -479,6 +524,14 @@ namespace LiveSplit.View
                     if (shouldFix)
                         FixSplitsFromSegments();
                 }
+                if( columnIndex == DEATHCOUNTINDEX )
+                {
+                    Run[rowIndex].PersonalBestDeathCount = -1;
+                }
+                if( columnIndex == BESTDEATHSINDEX )
+                {
+                    Run[rowIndex].BestDeathCount = -1;
+                }
                 if (columnIndex >= CUSTOMCOMPARISONSINDEX)
                 {
                     var time = new Time(Run[rowIndex].Comparisons[runGrid.Columns[columnIndex].Name]);
@@ -493,35 +546,51 @@ namespace LiveSplit.View
 
             try
             {
-                value = TimeSpanParser.Parse(value.ToString());
-                if (columnIndex == SEGMENTTIMEINDEX)
+                if( columnIndex == DEATHCOUNTINDEX || columnIndex == BESTDEATHSINDEX )
                 {
-                    SegmentTimeList[rowIndex] = (TimeSpan)value;
+                    value = int.Parse(value.ToString());
+                    if (columnIndex == DEATHCOUNTINDEX)
+                    {
+                        Run[rowIndex].PersonalBestDeathCount = (int)value;
+                    }
+                    else if (columnIndex == BESTDEATHSINDEX)
+                    {
+                        Run[rowIndex].BestDeathCount = (int)value;
+                    }
+                    return new ParsingResults(true, value);
+                }
+                else
+                {
+                    value = TimeSpanParser.Parse(value.ToString());
+                    if (columnIndex == SEGMENTTIMEINDEX)
+                    {
+                        SegmentTimeList[rowIndex] = (TimeSpan)value;
+                        if (shouldFix)
+                            FixSplitsFromSegments();
+                    }
+                    if (columnIndex >= CUSTOMCOMPARISONSINDEX)
+                    {
+                        var time = new Time(Run[rowIndex].Comparisons[runGrid.Columns[columnIndex].Name]);
+                        time[SelectedMethod] = (TimeSpan)value;
+                        Run[rowIndex].Comparisons[runGrid.Columns[columnIndex].Name] = time;
+                    }
+                    if (columnIndex == SPLITTIMEINDEX)
+                    {
+                        var time = new Time(Run[rowIndex].PersonalBestSplitTime);
+                        time[SelectedMethod] = (TimeSpan)value;
+                        Run[rowIndex].PersonalBestSplitTime = time;
+                    }
+                    if (columnIndex == BESTSEGMENTINDEX)
+                    {
+                        var time = new Time(Run[rowIndex].BestSegmentTime);
+                        time[SelectedMethod] = (TimeSpan)value;
+                        Run[rowIndex].BestSegmentTime = time;
+                    }
                     if (shouldFix)
-                        FixSplitsFromSegments();
+                        Fix();
+                    TimesModified();
+                    return new ParsingResults(true, value);
                 }
-                if (columnIndex >= CUSTOMCOMPARISONSINDEX)
-                {
-                    var time = new Time(Run[rowIndex].Comparisons[runGrid.Columns[columnIndex].Name]);
-                    time[SelectedMethod] = (TimeSpan)value;
-                    Run[rowIndex].Comparisons[runGrid.Columns[columnIndex].Name] = time;
-                }
-                if (columnIndex == SPLITTIMEINDEX)
-                {
-                    var time = new Time(Run[rowIndex].PersonalBestSplitTime);
-                    time[SelectedMethod] = (TimeSpan)value;
-                    Run[rowIndex].PersonalBestSplitTime = time;
-                }
-                if (columnIndex == BESTSEGMENTINDEX)
-                {
-                    var time = new Time(Run[rowIndex].BestSegmentTime);
-                    time[SelectedMethod] = (TimeSpan)value;
-                    Run[rowIndex].BestSegmentTime = time;
-                }
-                if (shouldFix)
-                    Fix();
-                TimesModified();
-                return new ParsingResults(true, value);
             }
             catch { }
 
@@ -532,7 +601,30 @@ namespace LiveSplit.View
         {
             if (e.RowIndex < Run.Count)
             {
-                if (e.ColumnIndex == SPLITTIMEINDEX)
+                if (e.ColumnIndex == DEATHCOUNTINDEX) 
+                {
+                    var countValue = Run[e.RowIndex].PersonalBestDeathCount;
+                    if( countValue == -1 ) { 
+                        e.Value = "";
+                        e.FormattingApplied = false;
+                    }
+                    else
+                    {
+                        e.Value = countValue;
+                    }
+                } else if (e.ColumnIndex == BESTDEATHSINDEX)
+                {
+                    var countValue = Run[e.RowIndex].BestDeathCount;
+                    if (countValue == -1)
+                    {
+                        e.Value = "";
+                        e.FormattingApplied = false;
+                    }
+                    else
+                    {
+                        e.Value = countValue;
+                    }
+                } else if (e.ColumnIndex == SPLITTIMEINDEX)
                 {
                     var comparisonValue = Run[e.RowIndex].PersonalBestSplitTime[SelectedMethod];
                     if (comparisonValue == null)
@@ -771,7 +863,7 @@ namespace LiveSplit.View
 
         private void runGrid_KeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Delete)
+            if (e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back)
             {
                 foreach (var selectedObject in runGrid.SelectedCells.OfType<DataGridViewCell>().Reverse())
                 {
@@ -780,7 +872,15 @@ namespace LiveSplit.View
                     if (selectedCell.RowIndex >= Run.Count || selectedCell.RowIndex < 0)
                         continue;
 
-                    if (selectedCell.ColumnIndex == SEGMENTNAMEINDEX)
+                    if (selectedCell.ColumnIndex == DEATHCOUNTINDEX)
+                    {
+                        Run[selectedCell.RowIndex].PersonalBestDeathCount = -1;
+                    }
+                    else if (selectedCell.ColumnIndex == BESTDEATHSINDEX)
+                    {
+                        Run[selectedCell.RowIndex].BestDeathCount = -1;
+                    }
+                    else if (selectedCell.ColumnIndex == SEGMENTNAMEINDEX)
                     {
                         Run[selectedCell.RowIndex].Name = "";
                         RaiseNameEdited();
