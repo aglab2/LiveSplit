@@ -116,10 +116,48 @@ namespace LiveSplit.View
                 catch { }
             }
         }
-        public int AttemptCount
+        public string AttemptCountStr
         {
-            get { return Run.AttemptCount; }
-            set { Run.AttemptCount = Math.Max(0, value); RaiseRunEdited(); }
+            get 
+            {
+                return Run.AttemptCount.ToString(); 
+            }
+            set 
+            {
+                int parsedValue;
+                if (value == "")
+                {
+                    Run.AttemptCount = 0;
+                    RaiseRunEdited();
+                } else if (int.TryParse( value, out parsedValue )) 
+                {
+                    Run.AttemptCount = Math.Max(0, parsedValue);
+                    RaiseRunEdited();
+                }
+                
+            }
+        }
+
+        public string LowestDeathCountStr 
+        {
+            get
+            {
+                return Run.BestDeathCount == -1 ? "" : Run.BestDeathCount.ToString(); 
+            }
+            set 
+            {
+                int parsedValue;
+                if (value == "")
+                {
+                    Run.BestDeathCount = -1;
+                    RaiseRunEdited();
+                } else if (int.TryParse( value, out parsedValue )) 
+                {
+                    Run.BestDeathCount = Math.Max(0, parsedValue);
+                    RaiseRunEdited();
+                }
+                
+            }
         }
 
         private class ParsingResults
@@ -222,7 +260,8 @@ namespace LiveSplit.View
             cbxGameName.DataBindings.Add("Text", this, "GameName");
             cbxRunCategory.DataBindings.Add("Text", this, "CategoryName");
             tbxTimeOffset.DataBindings.Add("Text", this, "Offset");
-            tbxAttempts.DataBindings.Add("Text", this, "AttemptCount");
+            tbxAttempts.DataBindings.Add("Text", this, "AttemptCountStr");
+            tbxLowestDeaths.DataBindings.Add("Text", this, "LowestDeathCountStr");
 
             picGameIcon.Image = GameIcon;
             removeIconToolStripMenuItem.Enabled = state.Run.GameIcon != null;
@@ -1593,6 +1632,7 @@ namespace LiveSplit.View
         private void clearTimesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             tbxAttempts.Text = "0";
+            tbxLowestDeaths.Text = "";
             Run.ClearTimes();
             RebuildComparisonColumns();
             Fix();
