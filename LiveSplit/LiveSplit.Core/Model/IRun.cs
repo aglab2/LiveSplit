@@ -88,9 +88,56 @@ namespace LiveSplit.Model
 
         public static void FixSplits(this IRun run)
         {
+            FixParentSplits( run );
+            FixLowestDeaths( run );
             FixWithMethod(run, TimingMethod.RealTime);
             FixWithMethod(run, TimingMethod.GameTime);
             RemoveNullValues(run);
+        }
+
+        private static void FixParentSplits( IRun run )
+        {
+            ISegment prevSplit = null;
+            int deathCount = -1;
+            foreach (var curSplit in run)
+            {
+                if (prevSplit != null && prevSplit.Parent == curSplit)
+                {
+                    curSplit.PersonalBestDeathCount = ( deathCount == -2 ) ? -1 : deathCount;
+                    curSplit.PersonalBestSplitTime = new Time( prevSplit.PersonalBestSplitTime.RealTime, prevSplit.PersonalBestSplitTime.GameTime );
+                    deathCount = -1;
+                }
+                else 
+                {
+                    if (curSplit.PersonalBestDeathCount != -1)
+                    {
+                        if (deathCount == -1)
+                        {
+                            deathCount = curSplit.PersonalBestDeathCount;
+                        }
+                        else if (deathCount != -2)
+                        {
+                            deathCount += curSplit.PersonalBestDeathCount;
+                        }
+                    }
+                    else
+                    {
+                        deathCount = -2;
+                    }
+                }
+                prevSplit = curSplit;
+            }
+        }
+
+        private static void FixLowestDeaths( IRun run )
+        {
+            foreach (var curSplit in run)
+            {
+                if (curSplit.PersonalBestDeathCount != -1 && curSplit.BestDeathCount > curSplit.PersonalBestDeathCount)
+                {
+                    curSplit.BestDeathCount = curSplit.PersonalBestDeathCount;
+                }
+            }
         }
 
         private static void FixWithMethod(IRun run, TimingMethod method)
@@ -159,7 +206,7 @@ namespace LiveSplit.Model
 
             foreach (var comparison in run.CustomComparisons)
             {
-                ISegment prevParent = null;
+                ISegment prevSplitParent = null;
                 var childrenStartTime = TimeSpan.Zero;
                 var previousTime = TimeSpan.Zero;
                 foreach (var curSplit in run)
@@ -177,7 +224,7 @@ namespace LiveSplit.Model
                         //Fix Best Segment time if the PB segment is faster
                         if (comparison == Run.PersonalBestComparisonName)
                         {
-                            var comparisonTime = prevParent == curSplit ? childrenStartTime : previousTime;
+                            var comparisonTime = prevSplitParent == curSplit ? childrenStartTime : previousTime;
                             var currentSegment = curSplit.Comparisons[comparison][method] - comparisonTime;
                             if (curSplit.BestSegmentTime[method] == null || curSplit.BestSegmentTime[method] > currentSegment)
                             {
@@ -187,9 +234,9 @@ namespace LiveSplit.Model
                             }
                         }
 
-                        if (prevParent != curSplit.Parent) {
+                        if (prevSplitParent != curSplit.Parent) {
                             childrenStartTime = previousTime;
-                            prevParent = curSplit.Parent;
+                            prevSplitParent = curSplit.Parent;
                         }
                         previousTime = curSplit.Comparisons[comparison][method].Value;
                     }

@@ -406,6 +406,7 @@ namespace LiveSplit.View
 
         void SegmentList_ListChanged(object sender, ListChangedEventArgs e)
         {
+            Run.FixParentTree();
             TimesModified();
             UpdateButtonsStatus();
         }
@@ -596,6 +597,9 @@ namespace LiveSplit.View
                     {
                         Run[rowIndex].BestDeathCount = (int)value;
                     }
+                    if (shouldFix)
+                        Fix();
+                    RaiseRunEdited();
                     return new ParsingResults(true, value);
                 }
                 else
@@ -768,11 +772,13 @@ namespace LiveSplit.View
 
         private void Fix()
         {
-            //Run.FixSplits();
+            Run.FixSplits();
             UpdateSegmentList();
             runGrid.InvalidateColumn(SPLITTIMEINDEX);
             runGrid.InvalidateColumn(BESTSEGMENTINDEX);
             runGrid.InvalidateColumn(SEGMENTTIMEINDEX);
+            runGrid.InvalidateColumn(DEATHCOUNTINDEX);
+            runGrid.InvalidateColumn(BESTDEATHSINDEX);
             for (var index = CUSTOMCOMPARISONSINDEX; index < runGrid.Columns.Count; index++)
                 runGrid.InvalidateColumn(index);
         }
@@ -849,19 +855,24 @@ namespace LiveSplit.View
 
         private void FixSplitsFromSegments()
         {
-            //var previousTime = TimeSpan.Zero;
-            //for (var index = 0; index < Run.Count; index++)
-            //{
-            //    var curSegment = Run[index];
-            //    var curSegTime = SegmentTimeList[index];
+            ISegment previousParent = null;
+            var previousTime = TimeSpan.Zero;
+            for (var index = 0; index < Run.Count; index++)
+            {
+                var curSegment = Run[index];
 
-            //    var time = new Time(curSegment.PersonalBestSplitTime);
-            //    time[SelectedMethod] = previousTime + curSegTime;
-            //    curSegment.PersonalBestSplitTime = time;
+                if (curSegment != previousParent)
+                {
+                    var curSegTime = SegmentTimeList[index];
+                    var time = new Time(curSegment.PersonalBestSplitTime);
+                    time[SelectedMethod] = previousTime + curSegTime;
+                    curSegment.PersonalBestSplitTime = time;
 
-            //    if (curSegTime != null)
-            //        previousTime = curSegment.PersonalBestSplitTime[SelectedMethod].Value;
-            //}
+                    if (curSegTime != null)
+                        previousTime = curSegment.PersonalBestSplitTime[SelectedMethod].Value;
+                }
+                previousParent = curSegment.Parent;
+            }
         }
 
         private void btnInsert_Click(object sender, EventArgs e)
@@ -914,10 +925,14 @@ namespace LiveSplit.View
                     if (selectedCell.ColumnIndex == DEATHCOUNTINDEX)
                     {
                         Run[selectedCell.RowIndex].PersonalBestDeathCount = -1;
+                        Fix();
+                        RaiseRunEdited();
                     }
                     else if (selectedCell.ColumnIndex == BESTDEATHSINDEX)
                     {
                         Run[selectedCell.RowIndex].BestDeathCount = -1;
+                        Fix();
+                        RaiseRunEdited();
                     }
                     else if (selectedCell.ColumnIndex == SEGMENTNAMEINDEX)
                     {
@@ -1075,6 +1090,7 @@ namespace LiveSplit.View
             {
                 //Fix the comparison times based on the new positions of the two segments
                 var previousTime = segIndex > 0 ? SegmentList.ElementAt(segIndex - 1).Comparisons[comparison] : new Time(TimeSpan.Zero, TimeSpan.Zero);
+                var previousParent = segIndex > 0 ? SegmentList.ElementAt(segIndex - 1).Parent : null;
                 var firstSegmentTime = firstSegment.Comparisons[comparison] - previousTime;
                 var secondSegmentTime = secondSegment.Comparisons[comparison] - firstSegment.Comparisons[comparison];
                 secondSegment.Comparisons[comparison] = new Time(previousTime + secondSegmentTime);
@@ -1089,8 +1105,9 @@ namespace LiveSplit.View
 
         private void FixAfterDeletion(int index)
         {
-            //FixWithTimingMethod(index, TimingMethod.RealTime);
-            //FixWithTimingMethod(index, TimingMethod.GameTime);
+            FixWithTimingMethod(index, TimingMethod.RealTime);
+            FixWithTimingMethod(index, TimingMethod.GameTime);
+            FixDeathCountOnDeletion( index );
         }
 
         private void FixWithTimingMethod(int index, TimingMethod method)
@@ -1129,17 +1146,39 @@ namespace LiveSplit.View
 
                 curIndex = index + 1;
 
-                //Set the new Best Segment time to be the sum of the two Best Segments
-                var minBestSegment = Run[index].BestSegmentTime[method] + Run[curIndex].BestSegmentTime[method];
-                //Use any element in the history that has a lower time than this sum
-                foreach (var history in Run[curIndex].SegmentHistory)
-                {
-                    if (history.Value[method] < minBestSegment)
-                        minBestSegment = history.Value[method];
+                if( Run[curIndex] != Run[index].Parent && ( index == 0 || Run[index - 1].Parent != Run[index] ) )
+                { 
+                    //Set the new Best Segment time to be the sum of the two Best Segments
+                    var minBestSegment = Run[index].BestSegmentTime[method] + Run[curIndex].BestSegmentTime[method];
+                    //Use any element in the history that has a lower time than this sum
+                    foreach (var history in Run[curIndex].SegmentHistory)
+                    {
+                        if (history.Value[method] < minBestSegment)
+                            minBestSegment = history.Value[method];
+                    }
+                    var newTime = Run[curIndex].BestSegmentTime;
+                    newTime[method] = minBestSegment;
+                    Run[curIndex].BestSegmentTime = newTime;
                 }
-                var newTime = Run[curIndex].BestSegmentTime;
-                newTime[method] = minBestSegment;
-                Run[curIndex].BestSegmentTime = newTime;
+            }
+        }
+
+        private void FixDeathCountOnDeletion( int index )
+        {
+            var curIndex = index + 1;
+            if( curIndex < Run.Count && Run[curIndex] != Run[index].Parent && ( index == 0 || Run[index - 1].Parent != Run[index] ) )
+            {
+                // Set the death counts to be the sum of two segments.
+                var deletedPbDeaths = Run[index].PersonalBestDeathCount;
+                var deletedLowestDeaths = Run[index].BestDeathCount;
+                if (deletedPbDeaths != -1 && Run[curIndex].PersonalBestDeathCount != -1)
+                {
+                    Run[curIndex].PersonalBestDeathCount += deletedPbDeaths;
+                }
+                if (deletedLowestDeaths != -1 && Run[curIndex].BestDeathCount != -1)
+                {
+                    Run[curIndex].BestDeathCount += deletedLowestDeaths;
+                }
             }
         }
 
@@ -1633,6 +1672,7 @@ namespace LiveSplit.View
         {
             tbxAttempts.Text = "0";
             tbxLowestDeaths.Text = "";
+            Run.BestDeathCount = -1;
             Run.ClearTimes();
             RebuildComparisonColumns();
             Fix();
