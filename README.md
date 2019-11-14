@@ -2,7 +2,8 @@
 
 This is a fork of LiveSplit v1.7.6 that adds additional comparison features:
 - Death display. Deaths in most IWBTG fangames can be tracked, displayed and compared to previous runs.
-- Better subsplits. Parent splits can have a separate icon and best segment time/deaths.
+- Better subsplits. Parent splits can have a separate icon and best segment times/deaths.
+- Ongoing run saving. Active runs can saved and continued at a later time.
 
 ---------------------------------------------------------------
 
