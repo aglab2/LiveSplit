@@ -54,7 +54,10 @@ namespace LiveSplit.UI.Components
 
         public DetailedTimer(LiveSplitState state)
         {
-            InternalComponent = new LiveSplit.UI.Components.Timer();
+            InternalComponent = new LiveSplit.UI.Components.Timer()
+            {
+                DeathsLabelVisible = false
+            };
             SegmentTimer = new SegmentTimer()
             {
                 DeathsLabelVisible = false

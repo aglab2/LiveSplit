@@ -45,6 +45,7 @@ namespace LiveSplit.UI.Components
         public bool CenterTimer { get; set; }
 
         public bool ShowGradient { get; set; }
+        public bool ShowDeathCount { get; set; }
 
         public string TimingMethod { get; set; }
 
@@ -68,6 +69,7 @@ namespace LiveSplit.UI.Components
             TimerColor = Color.FromArgb(170, 170, 170);
             OverrideSplitColors = false;
             ShowGradient = true;
+            ShowDeathCount = true;
             BackgroundColor = Color.Transparent;
             BackgroundColor2 = Color.Transparent;
             BackgroundGradient = DeltasGradientType.Plain;
@@ -78,6 +80,7 @@ namespace LiveSplit.UI.Components
             btnTimerColor.DataBindings.Add("BackColor", this, "TimerColor", false, DataSourceUpdateMode.OnPropertyChanged);
             chkOverrideTimerColors.DataBindings.Add("Checked", this, "OverrideSplitColors", false, DataSourceUpdateMode.OnPropertyChanged);
             chkGradient.DataBindings.Add("Checked", this, "ShowGradient", false, DataSourceUpdateMode.OnPropertyChanged);
+            chkDeaths.DataBindings.Add("Checked", this, "ShowDeathCount", false, DataSourceUpdateMode.OnPropertyChanged);
             cmbGradientType.DataBindings.Add("SelectedItem", this, "GradientString", false, DataSourceUpdateMode.OnPropertyChanged);
             btnColor1.DataBindings.Add("BackColor", this, "BackgroundColor", false, DataSourceUpdateMode.OnPropertyChanged);
             btnColor2.DataBindings.Add("BackColor", this, "BackgroundColor2", false, DataSourceUpdateMode.OnPropertyChanged);
@@ -168,6 +171,7 @@ namespace LiveSplit.UI.Components
             TimerHeight = SettingsHelper.ParseFloat(element["TimerHeight"]);
             TimerWidth = SettingsHelper.ParseFloat(element["TimerWidth"]);
             ShowGradient = SettingsHelper.ParseBool(element["ShowGradient"], true);
+            ShowDeathCount = SettingsHelper.ParseBool(element["ShowDeathCount"], true);
             TimerColor = SettingsHelper.ParseColor(element["TimerColor"], Color.FromArgb(170, 170, 170));
             DecimalsSize = SettingsHelper.ParseFloat(element["DecimalsSize"], 35f);
             BackgroundColor = SettingsHelper.ParseColor(element["BackgroundColor"], Color.Transparent);
@@ -226,6 +230,7 @@ namespace LiveSplit.UI.Components
             SettingsHelper.CreateSetting(document, parent, "TimerFormat", timerFormat) ^
             SettingsHelper.CreateSetting(document, parent, "OverrideSplitColors", OverrideSplitColors) ^
             SettingsHelper.CreateSetting(document, parent, "ShowGradient", ShowGradient) ^
+            SettingsHelper.CreateSetting(document, parent, "ShowDeathCount", ShowDeathCount) ^
             SettingsHelper.CreateSetting(document, parent, "TimerColor", TimerColor) ^
             SettingsHelper.CreateSetting(document, parent, "BackgroundColor", BackgroundColor) ^
             SettingsHelper.CreateSetting(document, parent, "BackgroundColor2", BackgroundColor2) ^

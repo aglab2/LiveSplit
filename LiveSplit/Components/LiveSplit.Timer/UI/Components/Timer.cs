@@ -171,13 +171,14 @@ namespace LiveSplit.UI.Components
             var heightFactor = height / unscaledHeight;
             var adjustValue = !Settings.CenterTimer ? 7f : 0f;
             var scale = Math.Min(widthFactor, heightFactor);
+            var deathsWidth = ( DeathsLabelVisible && Settings.ShowDeathCount ) ? DeathsLabel.ActualWidth : 0;
             g.TranslateTransform(width - adjustValue, height / 2);
             g.ScaleTransform(scale, scale);
             g.TranslateTransform(-unscaledWidth + adjustValue, -0.5f * unscaledHeight);
             if (Settings.CenterTimer)
                 g.TranslateTransform((-(width - unscaledWidth * scale) / 2f) / scale, 0);
             DrawUnscaled(g, state, unscaledWidth, unscaledHeight, oldMatrix);
-            ActualWidth = scale * (SmallTextLabel.ActualWidth + BigTextLabel.ActualWidth + DeathsLabel.ActualWidth);
+            ActualWidth = scale * (SmallTextLabel.ActualWidth + BigTextLabel.ActualWidth + deathsWidth);
         }
 
         private void GetGradientColors( Color baseColor, out Color topColor, out Color bottomColor )
@@ -261,7 +262,7 @@ namespace LiveSplit.UI.Components
             BigTextLabel.Draw(g);
             SmallTextLabel.Draw(g);
             g.TranslateTransform( -g.Transform.OffsetX / g.Transform.Elements[0], 0 );
-            if( DeathsLabelVisible ) { 
+            if( DeathsLabelVisible && Settings.ShowDeathCount ) { 
                 DeathsLabel.Draw(g);
             }
             g.Transform = oldMatrix;

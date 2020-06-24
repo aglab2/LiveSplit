@@ -384,7 +384,9 @@ namespace LiveSplit.UI.Components
                 return;
             }
             var newOffset = ScrollOffset + ScrollDelta;
-            newOffset = Math.Min(Math.Max(newOffset, -runningSectionIndex), state.Run.Count - runningSectionIndex - 1);
+            var minOffset = -runningSectionIndex;
+            var maxOffset = state.Run.Count - runningSectionIndex - 1;
+            newOffset = Math.Min(Math.Max(newOffset, minOffset), maxOffset);
 
             var split = runningSectionIndex + newOffset;
             var splitSectionPos = sectionList.getSection(split);
@@ -393,7 +395,9 @@ namespace LiveSplit.UI.Components
                 newOffset += Math.Sign( ScrollDelta );
             }
 
-            ScrollOffset = newOffset;
+            if( newOffset >= minOffset && newOffset <= maxOffset ) { 
+                ScrollOffset = newOffset;
+            }
             ScrollDelta = 0;
         }
 
@@ -441,8 +445,9 @@ namespace LiveSplit.UI.Components
                     SplitsSettings.SectionSplit = state.Run[sectionList.Sections[runningSectionIndex].endIndex];
             }
 
-            bool addLast = (Settings.AlwaysShowLastSplit || currentSplit == state.Run.Count() - 1);
             bool addHeader = (Settings.ShowHeader && (sectionList.Sections[currentSection].getSubsplitCount() > 0));
+            bool isLastSplitHeader = addHeader && sectionList.Sections[currentSection].endIndex == state.Run.Count() - 1;
+            bool addLast = !isLastSplitHeader && ( Settings.AlwaysShowLastSplit || currentSplit == state.Run.Count() - 1 );
 
             int freeSplits = visualSplitCount - (addLast ? 1 : 0) - (addHeader ? 1 : 0);
             int topSplit = currentSplit - 1;
@@ -625,7 +630,6 @@ namespace LiveSplit.UI.Components
         private bool ShouldIncludeSplit(int currentSection, int split)
         {
             var splitSection = sectionList.getSection( split );
-            var section = sectionList.Sections[splitSection];
             var includeBasedOnSettings = (sectionList.isMajorSplit(split)
                         && IsSplitHidden( splitSection, currentSection, split )
                        && (!Settings.CurrentSectionOnly || splitSection == currentSection)) ||
