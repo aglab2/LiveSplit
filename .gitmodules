@@ -10,10 +10,6 @@
 	path = LiveSplit/Components/LiveSplit.Graph
 	url = https://github.com/LiveSplit/LiveSplit.Graph.git
 	branch = master
-[submodule "LiveSplit/Components/LiveSplit.HotkeyIndicator"]
-	path = LiveSplit/Components/LiveSplit.HotkeyIndicator
-	url = https://github.com/LiveSplit/LiveSplit.HotkeyIndicator.git
-	branch = master
 [submodule "LiveSplit/Components/LiveSplit.ManualGameTime"]
 	path = LiveSplit/Components/LiveSplit.ManualGameTime
 	url = https://github.com/LiveSplit/LiveSplit.ManualGameTime.git
@@ -37,10 +33,6 @@
 [submodule "LiveSplit/Components/LiveSplit.Sound"]
 	path = LiveSplit/Components/LiveSplit.Sound
 	url = https://github.com/LiveSplit/LiveSplit.Sound.git
-	branch = master
-[submodule "LiveSplit/Components/LiveSplit.Splits"]
-	path = LiveSplit/Components/LiveSplit.Splits
-	url = https://github.com/LiveSplit/LiveSplit.Splits.git
 	branch = master
 [submodule "LiveSplit/Components/LiveSplit.SumOfBest"]
 	path = LiveSplit/Components/LiveSplit.SumOfBest

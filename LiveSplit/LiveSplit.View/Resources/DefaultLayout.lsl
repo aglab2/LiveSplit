@@ -49,7 +49,7 @@
       </Settings>
     </Component>
     <Component>
-      <Path>LiveSplit.Splits.dll</Path>
+      <Path>LiveSplit.Subsplits.dll</Path>
       <Settings>
         <Version>1.3</Version>
         <CurrentSplitTopColor>FF3373F4</CurrentSplitTopColor>
