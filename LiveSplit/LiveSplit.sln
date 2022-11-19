@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29806.167
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LiveSplit", "LiveSplit\LiveSplit.csproj", "{E8047F95-BA79-4E2E-A9BB-5C48D5FA2467}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -351,6 +351,9 @@ Global
 		{924AAFFE-5B89-49E2-99AD-EC9373CC838D} = {FAF78A7D-B7F6-4302-88E9-4B1E7AAC3552}
 		{CA2C668C-1C3F-4C44-9034-99848AFE47BA} = {91298215-12A5-4194-B848-1D6ABBFC586E}
 		{825B6521-94B8-4C8A-9709-3CA2ABFE70D7} = {91298215-12A5-4194-B848-1D6ABBFC586E}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {01A1FB56-602E-41FC-AAB7-824E17BC2321}
 	EndGlobalSection
 	GlobalSection(SubversionScc) = preSolution
 		Svn-Managed = True

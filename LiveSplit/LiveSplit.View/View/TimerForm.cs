@@ -151,7 +151,7 @@ namespace LiveSplit.View
             ComparisonGeneratorsFactory = new StandardComparisonGeneratorsFactory();
 
             Model = new DoubleTapPrevention(new TimerModel());
-            DeathCounter = new WindowTitleDeathCounter();
+            DeathCounter = new SM64EmulatorDeathCounter();
 
             RunFactory = new StandardFormatsRunFactory();
             RunSaver = new XMLRunSaver();
