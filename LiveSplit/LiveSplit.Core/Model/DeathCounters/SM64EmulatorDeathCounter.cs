@@ -18,9 +18,7 @@ namespace LiveSplit.Model.DeathCounters
         private Process process_ = null;
         private State state_ = State.INVALIDATED;
 
-        private IntPtr ptrSaveBuffer_;
         private IntPtr ptrLives_;
-        // private IntPtr ptrUnk0_;
         private IntPtr ptrUnk1_;
         private IntPtr ptrLevelScriptStack_;
         private IntPtr ptrCurrDemoInput_;
@@ -182,7 +180,6 @@ namespace LiveSplit.Model.DeathCounters
 
                 MagicManager mm = new MagicManager(process_, romPtrBaseSuggestions.ToArray(), ramPtrBaseSuggestions.ToArray(), offset);
                 ramPtrBase_ = mm.ramPtrBase;
-                ptrSaveBuffer_ = new IntPtr((long)(ramPtrBase_ + 0x207736));
                 ptrLives_ = new IntPtr((long)(ramPtrBase_ + 0x33B21E));
                 // ptrUnk0_ = new IntPtr((long)(ramPtrBase_ + 0x38BE28));
                 ptrLevelScriptStack_ = new IntPtr((long)(ramPtrBase_ + 0x38B8B0));
@@ -203,15 +200,6 @@ namespace LiveSplit.Model.DeathCounters
             try
             {
                 int ret = 0;
-                {
-                    process_.ReadValue(ptrSaveBuffer_, out short val);
-                    if (val != 17473)
-                    {
-                        inMenu_ = true;
-                        return 0;
-                    }
-                }
-
                 process_.ReadValue(ptrLives_, out byte num);
                 if (num == numLives_ - 1 && !inMenu_)
                 {
