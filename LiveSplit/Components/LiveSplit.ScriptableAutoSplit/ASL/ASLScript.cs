@@ -25,6 +25,9 @@ namespace LiveSplit.ASL
             public ASLMethod reset = no_op;
             public ASLMethod isLoading = no_op;
             public ASLMethod gameTime = no_op;
+            public ASLMethod onStart = no_op;
+            public ASLMethod onSplit = no_op;
+            public ASLMethod onReset = no_op;
 
             public ASLMethod[] GetMethods()
             {
@@ -39,7 +42,10 @@ namespace LiveSplit.ASL
                     split,
                     reset,
                     isLoading,
-                    gameTime
+                    gameTime,
+                    onStart,
+                    onSplit,
+                    onReset
                 };
             }
 
@@ -50,7 +56,6 @@ namespace LiveSplit.ASL
         public event EventHandler<double> RefreshRateChanged;
         public event EventHandler<string> GameVersionChanged;
 
-        private bool startMethodCalledFromUpdate = false;
         private string _game_version = string.Empty;
         public string GameVersion
         {
@@ -136,16 +141,34 @@ namespace LiveSplit.ASL
         public ASLSettings RunStartup(LiveSplitState state)
         {
             Debug("Running startup");
-            RunNoProcessMethod(_methods.startup, state, true);                                                         
+            RunNoProcessMethod(_methods.startup, state, true);
+
+            if(!_methods.onStart.IsEmpty)
+                state.OnStart += RunOnStart;
+            if(!_methods.onSplit.IsEmpty)
+                state.OnSplit += RunOnSplit;
+            if(!_methods.onReset.IsEmpty)
+                state.OnReset += RunOnReset;
+
             return _settings;
         }
+
+        private void RunOnStart(object sender, EventArgs e) => RunMethod(_methods.onStart, (LiveSplitState)sender);
+        private void RunOnSplit(object sender, EventArgs e) => RunMethod(_methods.onSplit, (LiveSplitState)sender);
+        private void RunOnReset(object sender, TimerPhase e) => RunMethod(_methods.onReset, (LiveSplitState)sender);
 
         public void RunShutdown(LiveSplitState state)
         {
             Debug("Running shutdown");
             RunMethod(_methods.shutdown, state);
-        }
 
+            if(!_methods.onStart.IsEmpty)
+                state.OnStart -= RunOnStart;
+            if(!_methods.onSplit.IsEmpty)
+                state.OnSplit -= RunOnSplit;
+            if(!_methods.onReset.IsEmpty)
+                state.OnReset -= RunOnReset;
+        }
 
         private void TryConnect(LiveSplitState state)
         {
@@ -241,17 +264,6 @@ namespace LiveSplit.ASL
                 return;
             }
 
-            // Call the start segment if the splits are not running, but ensure that the segment is called at least once.
-            if (state.CurrentPhase == TimerPhase.NotRunning || !startMethodCalledFromUpdate )
-            {
-                if (RunMethod(_methods.start, state) ?? false)
-                {
-                    if (_settings.GetBasicSettingValue("start") && state.CurrentPhase == TimerPhase.NotRunning)
-                        _timer.Start();
-                }
-                startMethodCalledFromUpdate = true;
-            }
-
             if (state.CurrentPhase == TimerPhase.Running || state.CurrentPhase == TimerPhase.Paused)
             {
                 if (_uses_game_time && !state.IsGameTimeInitialized)
@@ -274,6 +286,15 @@ namespace LiveSplit.ASL
                 {
                     if (_settings.GetBasicSettingValue("split"))
                         _timer.Split();
+                }
+            }
+
+            if (state.CurrentPhase == TimerPhase.NotRunning)
+            {
+                if (RunMethod(_methods.start, state) ?? false)
+                {
+                    if (_settings.GetBasicSettingValue("start"))
+                        _timer.Start();
                 }
             }
         }

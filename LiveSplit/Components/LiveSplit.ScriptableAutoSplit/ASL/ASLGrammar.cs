@@ -11,6 +11,7 @@ namespace LiveSplit.ASL
         {
             var string_lit = TerminalFactory.CreateCSharpString("string");
             var number = TerminalFactory.CreateCSharpNumber("number");
+            number.Options |= NumberOptions.AllowSign;
             var identifier = TerminalFactory.CreateCSharpIdentifier("identifier");
             var code = new CustomTerminal("code", MatchCodeTerminal);
 
@@ -30,6 +31,9 @@ namespace LiveSplit.ASL
             var shutdown = new KeyTerm("shutdown", "shutdown");
             var isLoading = new KeyTerm("isLoading", "isLoading");
             var gameTime = new KeyTerm("gameTime", "gameTime");
+            var onStart = new KeyTerm("onStart", "onStart");
+            var onSplit = new KeyTerm("onSplit", "onSplit");
+            var onReset = new KeyTerm("onReset", "onReset");
             var comma = ToTerm(",", "comma");
             var semi = ToTerm(";", "semi");
 
@@ -57,7 +61,7 @@ namespace LiveSplit.ASL
             method.Rule = (method_type + "{" + code + "}") | Empty;
             offset_list.Rule = MakePlusRule(offset_list, comma, offset);
             offset.Rule = number;
-            method_type.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown;
+            method_type.Rule = init | exit | update | start | split | isLoading | gameTime | reset | startup | shutdown | onStart | onSplit | onReset;
 
             Root = root;
 
